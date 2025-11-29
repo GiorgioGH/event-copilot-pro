@@ -1,18 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '@/contexts/EventContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, Users, MapPin, DollarSign, AlertTriangle, CheckCircle, Clock, Eye } from 'lucide-react';
+import { Calendar, Users, MapPin, DollarSign, AlertTriangle, CheckCircle, Clock, Eye, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 
 const EventSummaryCard = () => {
-  const { currentPlan } = useEvent();
+  const { currentPlan, updateEventPlan } = useEvent();
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPlan, setEditedPlan] = useState(currentPlan);
   const navigate = useNavigate();
+  
+  // Update edited plan when currentPlan changes
+  useEffect(() => {
+    if (currentPlan) {
+      setEditedPlan({ ...currentPlan });
+    }
+  }, [currentPlan]);
 
   if (!currentPlan) return null;
 
@@ -123,39 +134,129 @@ const EventSummaryCard = () => {
       <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{currentPlan.basics.name || 'Event Plan'}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl">{currentPlan.basics.name || 'Event Plan'}</DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsEditing(!isEditing);
+                  if (isEditing && editedPlan) {
+                    updateEventPlan(editedPlan);
+                  }
+                }}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                {isEditing ? 'Save' : 'Edit'}
+              </Button>
+            </div>
           </DialogHeader>
           <div className="space-y-6 mt-4">
             <div>
               <h3 className="font-semibold mb-2">Event Basics</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Type: </span>
-                  <span className="capitalize">{currentPlan.basics.type?.replace('-', ' ')}</span>
+                  <Label className="text-muted-foreground">Event Name</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedPlan?.basics.name || ''}
+                      onChange={(e) => setEditedPlan(prev => prev ? {
+                        ...prev,
+                        basics: { ...prev.basics, name: e.target.value }
+                      } : null)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1">{currentPlan.basics.name || 'Untitled'}</div>
+                  )}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Participants: </span>
-                  <span>{currentPlan.basics.participants}</span>
+                  <Label className="text-muted-foreground">Type</Label>
+                  <div className="mt-1 capitalize">{currentPlan.basics.type?.replace('-', ' ')}</div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Date: </span>
-                  <span>
-                    {currentPlan.basics.dateRange?.start 
-                      ? format(new Date(currentPlan.basics.dateRange.start), 'MMM d, yyyy')
-                      : 'TBD'}
-                  </span>
+                  <Label className="text-muted-foreground">Date</Label>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={currentPlan.basics.dateRange?.start 
+                        ? (currentPlan.basics.dateRange.start instanceof Date 
+                          ? currentPlan.basics.dateRange.start.toISOString().split('T')[0]
+                          : new Date(currentPlan.basics.dateRange.start).toISOString().split('T')[0])
+                        : ''}
+                      onChange={(e) => {
+                        const date = e.target.value ? new Date(e.target.value) : null;
+                        setEditedPlan(prev => prev ? {
+                          ...prev,
+                          basics: {
+                            ...prev.basics,
+                            dateRange: {
+                              start: date,
+                              end: prev.basics.dateRange?.end || null
+                            }
+                          }
+                        } : null);
+                      }}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1">
+                      {currentPlan.basics.dateRange?.start 
+                        ? format(new Date(currentPlan.basics.dateRange.start), 'MMM d, yyyy')
+                        : 'TBD'}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Location: </span>
-                  <span>{currentPlan.basics.location || 'TBD'}</span>
+                  <Label className="text-muted-foreground">Location</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedPlan?.basics.location || ''}
+                      onChange={(e) => setEditedPlan(prev => prev ? {
+                        ...prev,
+                        basics: { ...prev.basics, location: e.target.value }
+                      } : null)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1">{currentPlan.basics.location || 'TBD'}</div>
+                  )}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Budget: </span>
-                  <span>${currentPlan.basics.budget?.toLocaleString()}</span>
+                  <Label className="text-muted-foreground">Participants</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editedPlan?.basics.participants || 0}
+                      onChange={(e) => setEditedPlan(prev => prev ? {
+                        ...prev,
+                        basics: { ...prev.basics, participants: parseInt(e.target.value) || 0 }
+                      } : null)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1">{currentPlan.basics.participants}</div>
+                  )}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Estimated Cost: </span>
-                  <span>${currentPlan.estimatedCost.toLocaleString()}</span>
+                  <Label className="text-muted-foreground">Budget</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editedPlan?.basics.budget || 0}
+                      onChange={(e) => setEditedPlan(prev => prev ? {
+                        ...prev,
+                        basics: { ...prev.basics, budget: parseFloat(e.target.value) || 0 }
+                      } : null)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1">${currentPlan.basics.budget?.toLocaleString()}</div>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Estimated Cost</Label>
+                  <div className="mt-1">${currentPlan.estimatedCost.toLocaleString()}</div>
                 </div>
               </div>
             </div>
@@ -179,8 +280,14 @@ const EventSummaryCard = () => {
               <Button variant="outline" onClick={() => navigate('/dashboard')}>
                 Go to Dashboard
               </Button>
-              <Button onClick={() => setPlanDialogOpen(false)}>
-                Close
+              <Button onClick={() => {
+                if (isEditing && editedPlan) {
+                  updateEventPlan(editedPlan);
+                }
+                setPlanDialogOpen(false);
+                setIsEditing(false);
+              }}>
+                {isEditing ? 'Save & Close' : 'Close'}
               </Button>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { Vendor } from '@/types/event';
 
 // Scraped vendor data structure (from vendors.json)
 interface ScrapedVendor {
-  vendor_type: 'venue' | 'catering' | 'transport' | 'activities' | 'av-equipment';
+  vendor_type: 'venue' | 'catering' | 'transport' | 'activities' | 'av-equipment' | 'gifts' | 'miscellaneous';
   name: string;
   address_full: string | null;
   description?: string | null;
@@ -186,6 +186,8 @@ export function getVendorsByType(vendors: Vendor[]) {
     transport: vendors.filter(v => v.type === 'transport'),
     activities: vendors.filter(v => v.type === 'activities'),
     'av-equipment': vendors.filter(v => v.type === 'av-equipment'),
+    gifts: vendors.filter(v => v.type === 'gifts'),
+    miscellaneous: vendors.filter(v => v.type === 'miscellaneous'),
   };
 }
 

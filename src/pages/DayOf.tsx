@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import DashboardNav from '@/components/dashboard/DashboardNav';
+import { useEvent } from '@/contexts/EventContext';
+import { getScheduleForEventType } from '@/lib/eventSchedules';
 import { 
   Smartphone, 
   Phone, 
@@ -20,18 +22,6 @@ import {
   FileText
 } from 'lucide-react';
 
-const timeline = [
-  { id: '1', time: '07:30', task: 'Venue setup begins', completed: true, critical: false },
-  { id: '2', time: '08:00', task: 'AV equipment check', completed: true, critical: true },
-  { id: '3', time: '08:30', task: 'Catering arrives', completed: true, critical: true },
-  { id: '4', time: '08:45', task: 'Registration desk ready', completed: false, critical: true },
-  { id: '5', time: '09:00', task: 'Guest registration begins', completed: false, critical: false },
-  { id: '6', time: '09:30', task: 'Welcome drinks served', completed: false, critical: false },
-  { id: '7', time: '10:00', task: 'Opening keynote starts', completed: false, critical: true },
-  { id: '8', time: '11:30', task: 'Coffee break setup', completed: false, critical: false },
-  { id: '9', time: '13:00', task: 'Lunch service begins', completed: false, critical: true },
-];
-
 const contacts = [
   { name: 'Venue Manager', phone: '+1 (555) 123-4567', role: 'Grand Conference Center' },
   { name: 'Head Chef', phone: '+1 (555) 234-5678', role: 'Elite Catering' },
@@ -40,7 +30,19 @@ const contacts = [
 ];
 
 const DayOf = () => {
-  const [tasks, setTasks] = useState(timeline);
+  const { currentPlan } = useEvent();
+  const eventType = currentPlan?.basics?.type || 'workshop';
+  const schedule = getScheduleForEventType(eventType);
+  const [tasks, setTasks] = useState(schedule);
+  
+  // Update schedule when event changes
+  useEffect(() => {
+    if (currentPlan?.basics?.type) {
+      const newSchedule = getScheduleForEventType(currentPlan.basics.type);
+      setTasks(newSchedule);
+    }
+  }, [currentPlan?.basics?.type]);
+  
   const completedTasks = tasks.filter(t => t.completed).length;
   const progressPercent = Math.round((completedTasks / tasks.length) * 100);
 

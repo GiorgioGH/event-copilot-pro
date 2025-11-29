@@ -6,55 +6,116 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import DashboardNav from '@/components/dashboard/DashboardNav';
-import { useEvent } from '@/contexts/EventContext';
-import { 
-  loadEmployees, 
-  simulateAttendance, 
-  calculateAnalytics,
-  EmployeeWithAttendance 
-} from '@/lib/people';
 import { 
   BarChart3, 
-  Users, 
-  Clock, 
-  QrCode, 
-  Star, 
-  TrendingUp,
+  Calendar,
   DollarSign,
+  Users,
+  TrendingUp,
   Target,
   Download,
-  ThumbsUp,
-  Building2
+  Building,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+  PieChart
 } from 'lucide-react';
+import type { CopilotEvent } from '@/types/event';
+
+interface EventStats {
+  totalEvents: number;
+  totalBudget: number;
+  totalUsed: number;
+  averageBudget: number;
+  eventsByType: Record<string, number>;
+  eventsByMonth: Record<string, number>;
+  upcomingEvents: CopilotEvent[];
+  nextEventDate: string | null;
+}
 
 const Analytics = () => {
-  const { currentPlan } = useEvent();
-  const [employees, setEmployees] = useState<EmployeeWithAttendance[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [events, setEvents] = useState<CopilotEvent[]>([]);
+  const [stats, setStats] = useState<EventStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadEmployees().then(allEmployees => {
-      if (allEmployees.length === 0) {
-        setLoading(false);
-        return;
-      }
+    // Load events from events.json
+    fetch('/events.json')
+      .then(res => res.json())
+      .then((data: CopilotEvent[]) => {
+        // Valid event types
+        const validEventTypes = ['team-building', 'seminar', 'workshop', 'offsite', 'networking', 'company-dinner'];
+        
+        // Filter only future events with valid types
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const futureEvents = data.filter(event => {
+          const eventDate = new Date(event.date);
+          eventDate.setHours(0, 0, 0, 0);
+          const isValidType = validEventTypes.includes(event.type);
+          return eventDate >= today && event.status === 'future' && isValidType;
+        });
 
-      const participants = currentPlan?.basics.participants || 100;
-      const employeesWithAttendance = simulateAttendance(allEmployees, participants);
-      setEmployees(employeesWithAttendance);
-      
-      const calculated = calculateAnalytics(employeesWithAttendance);
-      setAnalytics(calculated);
-      setLoading(false);
+        // Sort by date
+        futureEvents.sort((a, b) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateA - dateB;
+        });
+
+        setEvents(futureEvents);
+        calculateStats(futureEvents);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading events:', error);
+        setLoading(false);
+      });
+  }, []);
+
+  const calculateStats = (futureEvents: CopilotEvent[]) => {
+    const totalEvents = futureEvents.length;
+    const totalBudget = futureEvents.reduce((sum, e) => sum + (e.budgetTotal || 0), 0);
+    const totalUsed = futureEvents.reduce((sum, e) => sum + (e.budgetUsed || 0), 0);
+    const averageBudget = totalEvents > 0 ? totalBudget / totalEvents : 0;
+
+    // Events by type
+    const eventsByType: Record<string, number> = {};
+    futureEvents.forEach(event => {
+      const type = event.type || 'other';
+      eventsByType[type] = (eventsByType[type] || 0) + 1;
     });
-  }, [currentPlan?.basics.participants]);
+
+    // Events by month
+    const eventsByMonth: Record<string, number> = {};
+    futureEvents.forEach(event => {
+      const date = new Date(event.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      eventsByMonth[monthKey] = (eventsByMonth[monthKey] || 0) + 1;
+    });
+
+    // Next event date
+    const nextEventDate = futureEvents.length > 0 
+      ? futureEvents[0].date 
+      : null;
+
+    setStats({
+      totalEvents,
+      totalBudget,
+      totalUsed,
+      averageBudget,
+      eventsByType,
+      eventsByMonth,
+      upcomingEvents: futureEvents.slice(0, 10), // Next 10 events
+      nextEventDate,
+    });
+  };
 
   if (loading) {
     return (
       <>
         <Helmet>
-          <title>Post-Event Analytics - SME Event Copilot</title>
+          <title>Event Analytics - SME Event Copilot</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
@@ -66,69 +127,35 @@ const Analytics = () => {
     );
   }
 
-  if (!analytics) {
+  if (!stats || stats.totalEvents === 0) {
     return (
       <>
         <Helmet>
-          <title>Post-Event Analytics - SME Event Copilot</title>
+          <title>Event Analytics - SME Event Copilot</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No analytics data available. Create an event first.</p>
+            <h2 className="text-2xl font-bold mb-4">No Future Events</h2>
+            <p className="text-muted-foreground">Create events to see analytics and insights.</p>
           </div>
         </main>
       </>
     );
   }
 
-  const satisfactionScore = analytics.avgSatisfaction || 4.6;
-  const attendanceRate = analytics.attendanceRate;
-  
-  // Calculate peak check-in time
-  const checkInTimes = employees
-    .filter(e => e.checkInTime)
-    .map(e => {
-      const [hour, minute] = e.checkInTime!.split(':').map(Number);
-      return hour * 60 + minute; // Convert to minutes
-    });
-  const avgCheckInMinutes = checkInTimes.length > 0
-    ? checkInTimes.reduce((a, b) => a + b, 0) / checkInTimes.length
-    : 8 * 60 + 30; // Default 8:30 AM
-  const peakHour = Math.floor(avgCheckInMinutes / 60);
-  const peakMinute = Math.round(avgCheckInMinutes % 60);
-  const peakCheckInTime = `${peakHour}:${peakMinute.toString().padStart(2, '0')} ${peakHour >= 12 ? 'PM' : 'AM'}`;
+  const budgetUtilization = stats.totalBudget > 0 
+    ? Math.round((stats.totalUsed / stats.totalBudget) * 100) 
+    : 0;
 
-  const attendanceMetrics = [
-    { label: 'Registered', value: analytics.invited, icon: Users },
-    { label: 'Attended', value: analytics.attended, icon: Users },
-    { label: 'No-shows', value: analytics.noShows, icon: Clock },
-    { label: 'Late Arrivals', value: analytics.lateArrivals, icon: Clock },
-  ];
-
-  // Generate engagement data based on attendance
-  const engagementData = [
-    { session: 'Opening Keynote', engagement: Math.min(95, 70 + analytics.attendanceRate * 0.25) },
-    { session: 'Strategy Workshop', engagement: Math.min(92, 65 + analytics.attendanceRate * 0.27) },
-    { session: 'Innovation Lab', engagement: Math.min(88, 60 + analytics.attendanceRate * 0.28) },
-    { session: 'Team Building', engagement: Math.min(94, 75 + analytics.attendanceRate * 0.19) },
-    { session: 'Networking', engagement: Math.min(85, 55 + analytics.attendanceRate * 0.30) },
-  ];
-
-  const totalCost = currentPlan?.estimatedCost || 10000;
-  const costPerHead = analytics.attended > 0 ? totalCost / analytics.attended : 0;
-
-  const roiMetrics = [
-    { label: 'Cost Per Head', value: `$${Math.round(costPerHead)}`, benchmark: '$95', isGood: costPerHead < 95 },
-    { label: 'Engagement/Cost', value: (analytics.attendanceRate / 100 / (costPerHead / 100)).toFixed(2), benchmark: '1.0', isGood: true },
-    { label: 'Impact Score', value: `${(satisfactionScore * 2).toFixed(1)}/10`, benchmark: '7.5/10', isGood: satisfactionScore * 2 >= 7.5 },
-  ];
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const sortedMonths = Object.keys(stats.eventsByMonth).sort();
 
   return (
     <>
       <Helmet>
-        <title>Post-Event Analytics - SME Event Copilot</title>
-        <meta name="description" content="Analyze your event success with detailed metrics and ROI." />
+        <title>Event Analytics - SME Event Copilot</title>
+        <meta name="description" content="Analytics and insights for your upcoming events." />
       </Helmet>
       
       <DashboardNav />
@@ -141,147 +168,95 @@ const Analytics = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Post-Event Analytics</h1>
-            <p className="text-muted-foreground">Measure success and calculate ROI</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Event Analytics</h1>
+            <p className="text-muted-foreground">Insights and statistics for your upcoming events</p>
           </div>
           <Button variant="accent">
             <Download className="w-4 h-4 mr-2" />
-            Export PDF Report
+            Export Report
           </Button>
         </motion.div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {attendanceMetrics.map((metric, index) => (
-            <motion.div
-              key={metric.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{metric.label}</p>
-                      <p className="text-3xl font-bold text-foreground">{metric.value}</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                      <metric.icon className="w-6 h-6 text-accent" />
-                    </div>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Events</p>
+                    <p className="text-3xl font-bold text-foreground">{stats.totalEvents}</p>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-accent" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Attendance Rate */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Budget</p>
+                    <p className="text-3xl font-bold text-foreground">${stats.totalBudget.toLocaleString()}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-success" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <QrCode className="w-5 h-5 text-accent" />
-                  Check-in Statistics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-accent/20 to-success/20 mb-4">
-                    <span className="text-4xl font-bold text-foreground">{attendanceRate}%</span>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Average Budget</p>
+                    <p className="text-3xl font-bold text-foreground">${Math.round(stats.averageBudget).toLocaleString()}</p>
                   </div>
-                  <p className="text-muted-foreground">Attendance Rate</p>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                    <span className="text-sm text-foreground">QR Code Check-ins</span>
-                    <Badge variant="secondary">{analytics.qrCheckIns} scans</Badge>
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                    <Target className="w-6 h-6 text-accent" />
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                    <span className="text-sm text-foreground">Manual Check-ins</span>
-                    <Badge variant="secondary">{analytics.manualCheckIns} entries</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                    <span className="text-sm text-foreground">Peak Check-in Time</span>
-                    <Badge variant="secondary">{peakCheckInTime}</Badge>
-                  </div>
-                  
-                  {/* Department Breakdown */}
-                  {Object.keys(analytics.byDepartment).length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">By Department</p>
-                      <div className="space-y-2">
-                        {Object.entries(analytics.byDepartment)
-                          .sort(([, a], [, b]) => b.attended - a.attended)
-                          .slice(0, 5)
-                          .map(([dept, stats]) => (
-                            <div key={dept} className="flex items-center justify-between text-xs">
-                              <span className="text-foreground truncate flex-1">{dept}</span>
-                              <span className="text-muted-foreground ml-2">
-                                {stats.attended}/{stats.invited}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Satisfaction Score */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
           >
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-accent" />
-                  Survey Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center gap-2 mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-8 h-8 ${star <= Math.floor(satisfactionScore) ? 'text-warning fill-warning' : 'text-muted'}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-4xl font-bold text-foreground">{satisfactionScore}/5.0</p>
-                  <p className="text-muted-foreground">Overall Satisfaction</p>
-                </div>
-                <div className="space-y-3">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Would recommend</span>
-                      <span className="text-foreground font-medium">92%</span>
-                    </div>
-                    <Progress value={92} className="h-2" />
+                    <p className="text-sm text-muted-foreground">Next Event</p>
+                    <p className="text-3xl font-bold text-foreground">
+                      {stats.nextEventDate 
+                        ? new Date(stats.nextEventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        : 'N/A'}
+                    </p>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Content relevance</span>
-                      <span className="text-foreground font-medium">88%</span>
-                    </div>
-                    <Progress value={88} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Organization quality</span>
-                      <span className="text-foreground font-medium">95%</span>
-                    </div>
-                    <Progress value={95} className="h-2" />
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-accent" />
                   </div>
                 </div>
               </CardContent>
@@ -289,83 +264,205 @@ const Analytics = () => {
           </motion.div>
         </div>
 
-        {/* Engagement Heatmap */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Budget Overview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-accent" />
+                  Budget Overview
+                </CardTitle>
+                <CardDescription>Budget allocation and utilization</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Total Budget</span>
+                      <span className="text-foreground font-medium">${stats.totalBudget.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Budget Used</span>
+                      <span className="text-foreground font-medium">${stats.totalUsed.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Remaining</span>
+                      <span className="text-success font-medium">${(stats.totalBudget - stats.totalUsed).toLocaleString()}</span>
+                    </div>
+                    <Progress value={budgetUtilization} className="h-3 mt-3" />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>0%</span>
+                      <span>{budgetUtilization}% utilized</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Events by Type */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="w-5 h-5 text-accent" />
+                  Events by Type
+                </CardTitle>
+                <CardDescription>Distribution of event types</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(stats.eventsByType)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([type, count]) => {
+                      const percentage = Math.round((count / stats.totalEvents) * 100);
+                      return (
+                        <div key={type}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-foreground capitalize">{type.replace('-', ' ')}</span>
+                            <span className="text-muted-foreground">{count} events ({percentage}%)</span>
+                          </div>
+                          <Progress value={percentage} className="h-2" />
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Events Timeline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className="mb-8"
         >
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-accent" />
-                Session Engagement
+                <BarChart3 className="w-5 h-5 text-accent" />
+                Events Timeline
               </CardTitle>
-              <CardDescription>Activity engagement by session</CardDescription>
+              <CardDescription>Upcoming events by month</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {engagementData.map((item, index) => (
-                  <motion.div
-                    key={item.session}
-                    className="flex items-center gap-4"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.35 + index * 0.05 }}
-                  >
-                    <div className="w-40 text-sm text-foreground truncate">{item.session}</div>
-                    <div className="flex-1">
-                      <Progress value={item.engagement} className="h-4" />
-                    </div>
-                    <div className="w-12 text-right">
-                      <span className="text-sm font-medium text-accent">{item.engagement}%</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              {sortedMonths.length > 0 ? (
+                <div className="space-y-4">
+                  {sortedMonths.map(monthKey => {
+                    const [year, month] = monthKey.split('-');
+                    const monthName = monthNames[parseInt(month) - 1];
+                    const count = stats.eventsByMonth[monthKey];
+                    const maxCount = Math.max(...Object.values(stats.eventsByMonth));
+                    const percentage = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+                    
+                    return (
+                      <div key={monthKey}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-foreground font-medium">{monthName} {year}</span>
+                          <span className="text-muted-foreground">{count} {count === 1 ? 'event' : 'events'}</span>
+                        </div>
+                        <Progress value={percentage} className="h-3" />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No events scheduled</p>
+              )}
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* ROI Calculation */}
+        {/* Upcoming Events */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.45 }}
         >
-          <Card className="bg-gradient-to-br from-accent/5 to-success/5 border-accent/20">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-accent" />
-                ROI Calculation
+                <Clock className="w-5 h-5 text-accent" />
+                Upcoming Events
               </CardTitle>
-              <CardDescription>Business impact metrics vs industry benchmarks</CardDescription>
+              <CardDescription>Next 10 scheduled events</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {roiMetrics.map((metric, index) => (
-                  <motion.div
-                    key={metric.label}
-                    className="p-6 rounded-xl bg-card border border-border text-center"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.45 + index * 0.05 }}
-                  >
-                    <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-                      <ThumbsUp className="w-6 h-6 text-success" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">{metric.label}</p>
-                    <p className="text-3xl font-bold text-foreground mb-1">{metric.value}</p>
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="text-xs text-muted-foreground">Benchmark:</span>
-                      <Badge variant="outline" className="text-xs">
-                        {metric.benchmark}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              {stats.upcomingEvents.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.upcomingEvents.map((event, index) => {
+                    const eventDate = new Date(event.date);
+                    const budgetUsed = event.budgetUsed || 0;
+                    const budgetTotal = event.budgetTotal || 0;
+                    const budgetPercent = budgetTotal > 0 ? Math.round((budgetUsed / budgetTotal) * 100) : 0;
+                    
+                    return (
+                      <motion.div
+                        key={event.id}
+                        className="p-4 rounded-lg border border-border bg-card"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.05 }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-foreground">{event.title}</h3>
+                              <Badge variant="outline" className="capitalize">{event.type}</Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                              {event.location && (
+                                <span className="flex items-center gap-1">
+                                  <Building className="w-4 h-4" />
+                                  {event.location}
+                                </span>
+                              )}
+                            </div>
+                            {budgetTotal > 0 && (
+                              <div className="mt-2">
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-muted-foreground">Budget</span>
+                                  <span className="text-foreground">
+                                    ${budgetUsed.toLocaleString()} / ${budgetTotal.toLocaleString()}
+                                  </span>
+                                </div>
+                                <Progress value={budgetPercent} className="h-1.5" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            {budgetPercent > 100 ? (
+                              <AlertCircle className="w-5 h-5 text-destructive" />
+                            ) : budgetPercent > 80 ? (
+                              <AlertCircle className="w-5 h-5 text-warning" />
+                            ) : (
+                              <CheckCircle2 className="w-5 h-5 text-success" />
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No upcoming events</p>
+              )}
             </CardContent>
           </Card>
         </motion.div>

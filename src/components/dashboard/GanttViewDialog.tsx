@@ -26,11 +26,11 @@ const GanttViewDialog = ({ open, onOpenChange, tasks }: GanttViewDialogProps) =>
 
   const getTaskPosition = (task: Task) => {
     const start = minDate.getTime();
-    const taskStart = task.dueDate.getTime() - 86400000 * 7; // Assume 7 days duration
-    const taskEnd = task.dueDate.getTime();
+    const taskDate = task.dueDate.getTime();
+    // Show task as a point on the due date (small width)
     const total = maxDate.getTime() - start;
-    const left = ((taskStart - start) / total) * 100;
-    const width = ((taskEnd - taskStart) / total) * 100;
+    const left = ((taskDate - start) / total) * 100;
+    const width = 2; // Fixed small width to show as a point
     return { left: Math.max(0, left), width: Math.max(2, width) };
   };
 

@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import type { CopilotEvent } from '@/types/event';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { loadEventsFromLocalStorage, saveEventsToLocalStorage } from '@/lib/events';
+import { useEvent } from '@/contexts/EventContext';
 
 function emptyEventForm(selectedDate?: Date): CopilotEvent {
   return {
@@ -23,21 +25,81 @@ function emptyEventForm(selectedDate?: Date): CopilotEvent {
 }
 
 export default function CalendarPanel() {
+  const { events: eventContextEvents } = useEvent();
   const [events, setEvents] = useState<CopilotEvent[]>([]);
   const [selected, setSelected] = useState<Date | undefined>();
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'add'>('add');
   const [modalEvent, setModalEvent] = useState<CopilotEvent | null>(null);
+  const lastEventsCountRef = useRef(0);
+
+  const loadAndMergeEvents = async () => {
+    try {
+      // Load from localStorage (newly created events)
+      const localEvents = loadEventsFromLocalStorage();
+      
+      // Load from events.json (existing events)
+      const response = await fetch('/events.json');
+      const jsonEvents: CopilotEvent[] = response.ok ? await response.json() : [];
+      
+      // Merge: combine both sources, prioritizing localStorage (newer events)
+      const eventMap = new Map<string, CopilotEvent>();
+      
+      // First add events.json events
+      jsonEvents.forEach(event => {
+        eventMap.set(event.id, event);
+      });
+      
+      // Then add/update with localStorage events (these are newer)
+      localEvents.forEach(event => {
+        eventMap.set(event.id, event);
+      });
+      
+      const mergedEvents = Array.from(eventMap.values());
+      setEvents(mergedEvents);
+      lastEventsCountRef.current = mergedEvents.length;
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('/events.json')
-      .then(res => res.json())
-      .then((data: CopilotEvent[]) => {
-        setEvents(data);
-        setLoading(false);
-      });
+    loadAndMergeEvents();
+    
+    // Poll for changes every 1 second (to catch localStorage updates from same window)
+    const pollInterval = setInterval(() => {
+      const localEvents = loadEventsFromLocalStorage();
+      const currentIds = new Set(events.map(e => e.id));
+      const localIds = new Set(localEvents.map(e => e.id));
+      
+      // Check if there are new events or if count changed
+      if (localEvents.length !== lastEventsCountRef.current || 
+          localEvents.some(e => !currentIds.has(e.id))) {
+        loadAndMergeEvents();
+      }
+    }, 1000);
+    
+    // Also listen for storage changes (from other tabs/windows)
+    const handleStorageChange = () => {
+      loadAndMergeEvents();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
+
+  // Also refresh when EventContext events change
+  useEffect(() => {
+    // Reload events when EventContext changes
+    loadAndMergeEvents();
+  }, [eventContextEvents.size]);
 
   const getEventsOnDay = (date: Date) => {
     return events.filter(evt => {
@@ -79,12 +141,18 @@ export default function CalendarPanel() {
     if (!modalEvent) return;
     const isPast = !isFuture(modalEvent.date);
     const obj = { ...modalEvent, status: isPast ? 'past' : 'future' };
+    let updatedEvents: CopilotEvent[];
     if (modalMode === 'add') {
       obj.id = (Date.now() + Math.random()).toString(36);
-      setEvents([...events, obj]);
+      updatedEvents = [...events, obj];
     } else if (modalMode === 'edit') {
-      setEvents(events.map(ev => ev.id === obj.id ? obj : ev));
+      updatedEvents = events.map(ev => ev.id === obj.id ? obj : ev);
+    } else {
+      updatedEvents = events;
     }
+    setEvents(updatedEvents);
+    // Save to localStorage in events.json format
+    saveEventsToLocalStorage(updatedEvents);
     setModalOpen(false);
   };
 

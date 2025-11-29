@@ -4,20 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { BarChart3, Clock, User, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { BarChart3, Clock, CheckCircle2 } from 'lucide-react';
 import { Task } from '@/types/event';
 import { useEvent } from '@/contexts/EventContext';
+import { generateTasksForEventType } from '@/lib/eventTasks';
 import GanttViewDialog from './GanttViewDialog';
-
-// Default tasks if event has none
-const defaultTasks: Task[] = [
-  { id: '1', title: 'Confirm venue booking', owner: 'Sarah M.', dueDate: new Date(Date.now() + 86400000 * 7), status: 'pending', priority: 'high' },
-  { id: '2', title: 'Finalize catering menu', owner: 'John D.', dueDate: new Date(Date.now() + 86400000 * 14), status: 'in-progress', priority: 'medium' },
-  { id: '3', title: 'Send invitations', owner: 'Emily R.', dueDate: new Date(Date.now() + 86400000 * 21), status: 'pending', priority: 'high' },
-  { id: '4', title: 'Book AV equipment', owner: 'Mike T.', dueDate: new Date(Date.now() + 86400000 * 28), status: 'completed', priority: 'medium' },
-  { id: '5', title: 'Arrange transportation', owner: 'Lisa K.', dueDate: new Date(Date.now() + 86400000 * 35), status: 'pending', priority: 'low' },
-  { id: '6', title: 'Create event badges', owner: 'Chris P.', dueDate: new Date(Date.now() + 86400000 * 42), status: 'pending', priority: 'low' },
-];
 
 const statusColors = {
   pending: 'bg-secondary text-muted-foreground',
@@ -36,14 +27,22 @@ const TasksTimeline = () => {
   const { tasks, setTasks, currentPlan } = useEvent();
   const [ganttOpen, setGanttOpen] = useState(false);
   
-  // Initialize tasks if empty
+  // Generate tasks based on event type if empty
   useEffect(() => {
     if (currentPlan && tasks.length === 0) {
-      setTasks(defaultTasks);
+      const eventDate = currentPlan.basics?.dateRange?.start;
+      if (eventDate) {
+        const date = eventDate instanceof Date ? eventDate : new Date(eventDate);
+        const generatedTasks = generateTasksForEventType(
+          currentPlan.basics?.type || 'workshop',
+          date
+        );
+        setTasks(generatedTasks);
+      }
     }
   }, [currentPlan, tasks.length, setTasks]);
 
-  const displayTasks = tasks.length > 0 ? tasks : defaultTasks;
+  const displayTasks = tasks.length > 0 ? tasks : [];
 
   const toggleTask = (taskId: string) => {
     setTasks(prev => prev.map(task => 
@@ -105,10 +104,6 @@ const TasksTimeline = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {task.owner}
-                    </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {task.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

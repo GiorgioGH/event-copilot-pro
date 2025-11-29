@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { BudgetCategory } from '@/types/event';
+import { loadScrapedVendors } from '@/lib/vendors';
 
 const initialCategories: BudgetCategory[] = [
   { id: 'venue', name: 'Venue', allocated: 5000, recommended: 5000, spent: 4500, icon: 'Building' },
@@ -47,9 +48,82 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const BudgetPlanner = () => {
-  const { currentPlan } = useEvent();
+  const { currentPlan, selectedVendors, setSelectedVendors } = useEvent();
   const { toast } = useToast();
   const [categories, setCategories] = useState(initialCategories);
+  const [allVendors, setAllVendors] = useState<any[]>([]);
+  
+  // Load all vendors and calculate AI recommendations (lowest price for each type)
+  useEffect(() => {
+    loadScrapedVendors().then(vendors => {
+      setAllVendors(vendors);
+      
+      // Calculate AI recommended (lowest price) for each vendor type
+      const typeToLowestPrice: Record<string, number> = {};
+      const vendorTypeMap: Record<string, string> = {
+        'venue': 'venue',
+        'catering': 'catering',
+        'transport': 'transport',
+        'activities': 'activities',
+        'av': 'av-equipment',
+        'gifts': 'gifts',
+        'misc': 'miscellaneous',
+      };
+      
+      Object.entries(vendorTypeMap).forEach(([catId, vendorType]) => {
+        const vendorsOfType = vendors.filter(v => v.type === vendorType);
+        if (vendorsOfType.length > 0) {
+          const lowestPrice = Math.min(...vendorsOfType.map(v => v.priceEstimate));
+          typeToLowestPrice[catId] = lowestPrice;
+        }
+      });
+      
+      // Update categories with AI recommendations
+      setCategories(prev => prev.map(cat => {
+        const recommended = typeToLowestPrice[cat.id] || cat.recommended;
+        return {
+          ...cat,
+          recommended,
+        };
+      }));
+    });
+  }, []);
+  
+  // Update budget categories when vendors are selected
+  useEffect(() => {
+    if (allVendors.length === 0) return;
+    
+    const selected = selectedVendors.length > 0 
+      ? allVendors.filter(v => selectedVendors.includes(v.id))
+      : [];
+    
+    setCategories(prev => prev.map(cat => {
+      // Map vendor types to budget categories
+      let vendorType: string | null = null;
+      if (cat.id === 'venue') vendorType = 'venue';
+      else if (cat.id === 'catering') vendorType = 'catering';
+      else if (cat.id === 'transport') vendorType = 'transport';
+      else if (cat.id === 'activities') vendorType = 'activities';
+      else if (cat.id === 'av') vendorType = 'av-equipment';
+      else if (cat.id === 'gifts') vendorType = 'gifts';
+      else if (cat.id === 'misc') vendorType = 'miscellaneous';
+      
+      if (vendorType) {
+        // Sum prices of selected vendors of this type
+        const vendorsOfType = selected.filter(v => v.type === vendorType);
+        const totalPrice = vendorsOfType.length > 0
+          ? vendorsOfType.reduce((sum, v) => sum + v.priceEstimate, 0)
+          : 0; // Set to 0 if no vendors selected
+        
+        return {
+          ...cat,
+          allocated: totalPrice,
+        };
+      }
+      
+      return cat;
+    }));
+  }, [selectedVendors, allVendors]);
   
   const totalBudget = currentPlan?.basics.budget || 12000;
   const totalAllocated = categories.reduce((sum, cat) => sum + cat.allocated, 0);
@@ -155,15 +229,69 @@ const BudgetPlanner = () => {
                   </div>
                   <Button 
                     variant="accent" 
-                    onClick={() => {
-                      // Optimize budget: adjust allocations to match recommendations
-                      setCategories(prev => prev.map(cat => ({
-                        ...cat,
-                        allocated: cat.recommended
-                      })));
+                    onClick={async () => {
+                      // Load vendors if not already loaded
+                      let vendors = allVendors;
+                      if (vendors.length === 0) {
+                        vendors = await loadScrapedVendors();
+                        setAllVendors(vendors);
+                      }
+                      
+                      // AI Optimize: Select lowest vendor for each type
+                      const vendorTypeMap: Record<string, string> = {
+                        'venue': 'venue',
+                        'catering': 'catering',
+                        'transport': 'transport',
+                        'activities': 'activities',
+                        'av': 'av-equipment',
+                        'gifts': 'gifts',
+                        'misc': 'miscellaneous',
+                      };
+                      
+                      const vendorsToSelect: string[] = [];
+                      
+                      // Find lowest vendor for each type
+                      Object.entries(vendorTypeMap).forEach(([catId, vendorType]) => {
+                        const vendorsOfType = vendors.filter((v: any) => v.type === vendorType && v.availability);
+                        if (vendorsOfType.length > 0) {
+                          // Sort by price and get the lowest
+                          const sorted = [...vendorsOfType].sort((a: any, b: any) => a.priceEstimate - b.priceEstimate);
+                          vendorsToSelect.push(sorted[0].id);
+                        }
+                      });
+                      
+                      // Calculate total cost
+                      const selectedVendorsList = vendors.filter((v: any) => vendorsToSelect.includes(v.id));
+                      let totalCost = selectedVendorsList.reduce((sum: number, v: any) => sum + v.priceEstimate, 0);
+                      
+                      // If over budget, drop vendors in priority order (venues never dropped)
+                      // Priority: misc > gifts > activities > transport > av-equipment > catering
+                      const dropPriority: string[] = ['miscellaneous', 'gifts', 'activities', 'transport', 'av-equipment', 'catering'];
+                      
+                      if (totalCost > totalBudget) {
+                        for (const vendorType of dropPriority) {
+                          if (totalCost <= totalBudget) break;
+                          
+                          const vendorsOfType = selectedVendorsList.filter((v: any) => v.type === vendorType);
+                          if (vendorsOfType.length > 0) {
+                            // Remove the most expensive vendor of this type
+                            const sorted = [...vendorsOfType].sort((a: any, b: any) => b.priceEstimate - a.priceEstimate);
+                            const toRemove = sorted[0].id;
+                            const index = vendorsToSelect.indexOf(toRemove);
+                            if (index > -1) {
+                              vendorsToSelect.splice(index, 1);
+                              totalCost -= sorted[0].priceEstimate;
+                            }
+                          }
+                        }
+                      }
+                      
+                      // Update selected vendors
+                      setSelectedVendors(vendorsToSelect);
+                      
                       toast({
                         title: "Budget Optimized",
-                        description: "Allocations adjusted to AI recommendations for optimal budget distribution.",
+                        description: `Selected ${vendorsToSelect.length} vendors with total cost of $${totalCost.toLocaleString()}. ${totalCost > totalBudget ? 'Still over budget - consider increasing budget or removing more vendors.' : 'Within budget!'}`,
                       });
                     }}
                   >

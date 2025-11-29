@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { EventBasics, EventRequirements, EventSpecialConditions, EventPlan, Task } from '@/types/event';
+import { syncEventsToJson, saveEventsToLocalStorage } from '@/lib/events';
 
 interface EventData {
   plan: EventPlan | null;
   selectedVendors: string[];
   tasks: Task[];
+  invitedPeople: number[]; // Array of employee No (IDs)
 }
 
 interface EventContextType {
@@ -18,10 +20,13 @@ interface EventContextType {
   // Current event data (convenience getters)
   currentPlan: EventPlan | null;
   setCurrentPlan: (plan: EventPlan | null) => void;
+  updateEventPlan: (plan: EventPlan) => void;
   selectedVendors: string[];
   setSelectedVendors: (vendors: string[] | ((prev: string[]) => string[])) => void;
   tasks: Task[];
   setTasks: (tasks: Task[] | ((prev: Task[]) => Task[])) => void;
+  invitedPeople: number[];
+  setInvitedPeople: (people: number[] | ((prev: number[]) => number[])) => void;
   
   // Onboarding state
   currentStep: number;
@@ -73,6 +78,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             plan: data.plan ? { ...data.plan, createdAt: new Date(data.plan.createdAt), updatedAt: new Date(data.plan.updatedAt) } : null,
             selectedVendors: data.selectedVendors || [],
             tasks: (data.tasks || []).map((t: any) => ({ ...t, dueDate: new Date(t.dueDate) })),
+            invitedPeople: data.invitedPeople || [],
           });
         });
         setEvents(eventsMap);
@@ -91,17 +97,32 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Save events to localStorage whenever they change
   useEffect(() => {
     if (events.size > 0) {
-      const toSave: Record<string, any> = {};
-      events.forEach((data, id) => {
-        toSave[id] = {
-          plan: data.plan,
-          selectedVendors: data.selectedVendors,
-          tasks: data.tasks,
-        };
-      });
-      localStorage.setItem('events', JSON.stringify(toSave));
-      if (currentEventId) {
-        localStorage.setItem('currentEventId', currentEventId);
+      try {
+        const toSave: Record<string, any> = {};
+        events.forEach((data, id) => {
+          toSave[id] = {
+            plan: data.plan,
+            selectedVendors: data.selectedVendors,
+            tasks: data.tasks,
+            invitedPeople: data.invitedPeople,
+          };
+        });
+        localStorage.setItem('events', JSON.stringify(toSave));
+        if (currentEventId) {
+          localStorage.setItem('currentEventId', currentEventId);
+        }
+        
+        // Also sync to events.json format (with error handling)
+        try {
+          const copilotEvents = syncEventsToJson(events);
+          saveEventsToLocalStorage(copilotEvents);
+        } catch (syncError) {
+          console.error('Error syncing events to JSON format:', syncError);
+          // Don't crash the app if sync fails
+        }
+      } catch (error) {
+        console.error('Error saving events to localStorage:', error);
+        // Don't crash the app if localStorage fails
       }
     }
   }, [events, currentEventId]);
@@ -111,6 +132,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const currentPlan = currentEvent?.plan || null;
   const selectedVendors = currentEvent?.selectedVendors || [];
   const tasks = currentEvent?.tasks || [];
+  const invitedPeople = currentEvent?.invitedPeople || [];
 
   // Create new event
   const createEvent = (plan: EventPlan): string => {
@@ -119,6 +141,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       plan,
       selectedVendors: [],
       tasks: [],
+      invitedPeople: [],
     };
     setEvents(prev => new Map(prev).set(id, newEvent));
     setCurrentEventId(id);
@@ -143,10 +166,15 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!currentEventId) return;
     setEvents(prev => {
       const newMap = new Map(prev);
-      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [] };
+      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [], invitedPeople: [] };
       newMap.set(currentEventId, { ...current, plan });
       return newMap;
     });
+  };
+
+  // Update event plan (alias for setCurrentPlan for clarity)
+  const updateEventPlan = (plan: EventPlan) => {
+    setCurrentPlan(plan);
   };
 
   // Update selected vendors
@@ -154,7 +182,7 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!currentEventId) return;
     setEvents(prev => {
       const newMap = new Map(prev);
-      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [] };
+      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [], invitedPeople: [] };
       const newVendors = typeof vendors === 'function' ? vendors(current.selectedVendors) : vendors;
       newMap.set(currentEventId, { ...current, selectedVendors: newVendors });
       return newMap;
@@ -166,9 +194,21 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!currentEventId) return;
     setEvents(prev => {
       const newMap = new Map(prev);
-      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [] };
+      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [], invitedPeople: [] };
       const updatedTasks = typeof newTasks === 'function' ? newTasks(current.tasks) : newTasks;
       newMap.set(currentEventId, { ...current, tasks: updatedTasks });
+      return newMap;
+    });
+  };
+
+  // Update invited people
+  const setInvitedPeople = (people: number[] | ((prev: number[]) => number[])) => {
+    if (!currentEventId) return;
+    setEvents(prev => {
+      const newMap = new Map(prev);
+      const current = newMap.get(currentEventId) || { plan: null, selectedVendors: [], tasks: [], invitedPeople: [] };
+      const newPeople = typeof people === 'function' ? people(current.invitedPeople) : people;
+      newMap.set(currentEventId, { ...current, invitedPeople: newPeople });
       return newMap;
     });
   };
@@ -183,10 +223,13 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         deleteEvent,
         currentPlan,
         setCurrentPlan,
+        updateEventPlan,
         selectedVendors,
         setSelectedVendors,
         tasks,
         setTasks,
+        invitedPeople,
+        setInvitedPeople,
         currentStep,
         setCurrentStep,
         eventBasics,

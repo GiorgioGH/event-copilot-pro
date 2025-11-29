@@ -22,7 +22,10 @@ import {
   UtensilsCrossed,
   Bus,
   Speaker,
-  Loader2
+  Loader2,
+  Gamepad2,
+  Gift,
+  MoreHorizontal
 } from 'lucide-react';
 import { Vendor } from '@/types/event';
 import { loadScrapedVendors, getVendorsByType } from '@/lib/vendors';
@@ -32,6 +35,9 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   catering: UtensilsCrossed,
   transport: Bus,
   'av-equipment': Speaker,
+  activities: Gamepad2,
+  gifts: Gift,
+  miscellaneous: MoreHorizontal,
 };
 
 const Vendors = () => {
@@ -178,17 +184,6 @@ const Vendors = () => {
                           <td key={vendor.id} className="py-3 px-4">{vendor.location}</td>
                         ))}
                       </tr>
-                      <tr className="border-b border-border">
-                        <td className="py-3 px-4 text-muted-foreground">Fit Score</td>
-                        {selectedForComparison.map(vendor => (
-                          <td key={vendor.id} className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <Progress value={vendor.fitScore} className="w-20 h-2" />
-                              <span className="text-sm font-medium text-accent">{vendor.fitScore}%</span>
-                            </div>
-                          </td>
-                        ))}
-                      </tr>
                       <tr>
                         <td className="py-3 px-4 text-muted-foreground">Availability</td>
                         {selectedForComparison.map(vendor => (
@@ -209,7 +204,7 @@ const Vendors = () => {
 
         {/* Vendor Tabs */}
         <Tabs defaultValue="venue" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
             <TabsTrigger value="venue" className="gap-2">
               <Building className="w-4 h-4" />
               Venues
@@ -225,6 +220,18 @@ const Vendors = () => {
             <TabsTrigger value="av-equipment" className="gap-2">
               <Speaker className="w-4 h-4" />
               AV Equipment
+            </TabsTrigger>
+            <TabsTrigger value="activities" className="gap-2">
+              <Gamepad2 className="w-4 h-4" />
+              Activities
+            </TabsTrigger>
+            <TabsTrigger value="gifts" className="gap-2">
+              <Gift className="w-4 h-4" />
+              Gifts
+            </TabsTrigger>
+            <TabsTrigger value="miscellaneous" className="gap-2">
+              <MoreHorizontal className="w-4 h-4" />
+              Miscellaneous
             </TabsTrigger>
           </TabsList>
 
@@ -294,11 +301,6 @@ const Vendors = () => {
                               <span className="text-lg font-semibold text-foreground">
                                 ${vendor.priceEstimate.toLocaleString()}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">Fit</span>
-                              <Progress value={vendor.fitScore} className="w-16 h-2" />
-                              <span className="text-sm font-medium text-accent">{vendor.fitScore}%</span>
                             </div>
                           </div>
 

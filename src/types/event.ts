@@ -57,7 +57,7 @@ export interface AgendaItem {
 export interface Vendor {
   id: string;
   name: string;
-  type: 'venue' | 'catering' | 'transport' | 'activities' | 'av-equipment';
+  type: 'venue' | 'catering' | 'transport' | 'activities' | 'av-equipment' | 'gifts' | 'miscellaneous';
   image: string;
   priceEstimate: number;
   location: string;
