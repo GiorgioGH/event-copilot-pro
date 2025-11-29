@@ -8,6 +8,8 @@ import SelectedVendorsPanel from '@/components/dashboard/SelectedVendorsPanel';
 import DashboardNav from '@/components/dashboard/DashboardNav';
 import ConfigAssistant from '@/components/chat/ConfigAssistant';
 import { useEvent } from '@/contexts/EventContext';
+import CalendarPanel from '@/components/dashboard/CalendarPanel';
+import SidebarEvents from '@/components/dashboard/SidebarEvents';
 
 const Dashboard = () => {
   const { currentPlan } = useEvent();
@@ -63,14 +65,16 @@ const Dashboard = () => {
 
         {/* Three Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Tasks */}
+          {/* Left Column - My Events & Tasks */}
           <div className="lg:col-span-1">
+            <SidebarEvents />
+            <div className="mt-6" />
             <TasksTimeline />
           </div>
 
-          {/* Middle Column - Agenda */}
+          {/* Middle Column - Calendar */}
           <div className="lg:col-span-1">
-            <AgendaPanel />
+            <CalendarPanel />
           </div>
 
           {/* Right Column - Vendors */}

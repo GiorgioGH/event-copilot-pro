@@ -85,3 +85,17 @@ export interface RiskItem {
   severity: 'low' | 'medium' | 'high';
   mitigation?: string;
 }
+
+export interface CopilotEvent {
+  id: string;
+  title: string;
+  type: string;
+  date: string;
+  time?: string;
+  description?: string;
+  location?: string;
+  budgetTotal?: number;
+  budgetUsed?: number;
+  attendees?: string[];
+  status: 'future' | 'past';
+}
