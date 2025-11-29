@@ -5,7 +5,7 @@ const Landing = () => {
   return (
     <>
       <Helmet>
-        <title>SME Event Copilot - AI-Powered Corporate Event Planning</title>
+        <title>EventPaul - AI-Powered Corporate Event Planning</title>
         <meta name="description" content="Plan corporate events in minutes with AI-powered optimization, automated scheduling, vendor matching, and risk analytics." />
       </Helmet>
       <main>

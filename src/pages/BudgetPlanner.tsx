@@ -173,7 +173,7 @@ const BudgetPlanner = () => {
   return (
     <>
       <Helmet>
-        <title>Budget Planner - SME Event Copilot</title>
+        <title>Budget Planner - EventPaul</title>
         <meta name="description" content="Plan and track your event budget with AI recommendations." />
       </Helmet>
       

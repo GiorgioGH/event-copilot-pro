@@ -115,7 +115,7 @@ const Analytics = () => {
     return (
       <>
         <Helmet>
-          <title>Event Analytics - SME Event Copilot</title>
+          <title>Event Analytics - EventPaul</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
@@ -131,7 +131,7 @@ const Analytics = () => {
     return (
       <>
         <Helmet>
-          <title>Event Analytics - SME Event Copilot</title>
+          <title>Event Analytics - EventPaul</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
@@ -154,7 +154,7 @@ const Analytics = () => {
   return (
     <>
       <Helmet>
-        <title>Event Analytics - SME Event Copilot</title>
+        <title>Event Analytics - EventPaul</title>
         <meta name="description" content="Analytics and insights for your upcoming events." />
       </Helmet>
       
@@ -341,49 +341,6 @@ const Analytics = () => {
             </Card>
           </motion.div>
         </div>
-
-        {/* Events Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-8"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-accent" />
-                Events Timeline
-              </CardTitle>
-              <CardDescription>Upcoming events by month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {sortedMonths.length > 0 ? (
-                <div className="space-y-4">
-                  {sortedMonths.map(monthKey => {
-                    const [year, month] = monthKey.split('-');
-                    const monthName = monthNames[parseInt(month) - 1];
-                    const count = stats.eventsByMonth[monthKey];
-                    const maxCount = Math.max(...Object.values(stats.eventsByMonth));
-                    const percentage = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
-                    
-                    return (
-                      <div key={monthKey}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-foreground font-medium">{monthName} {year}</span>
-                          <span className="text-muted-foreground">{count} {count === 1 ? 'event' : 'events'}</span>
-                        </div>
-                        <Progress value={percentage} className="h-3" />
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-4">No events scheduled</p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Upcoming Events */}
         <motion.div

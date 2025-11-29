@@ -28,33 +28,31 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <ErrorBoundary>
-          <EventProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Header />
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/generating" element={<Generating />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/risk" element={<RiskDashboard />} />
-                  <Route path="/budget" element={<BudgetPlanner />} />
-                  <Route path="/vendors" element={<Vendors />} />
-                  <Route path="/collaboration" element={<Collaboration />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/team" element={<Team />} />
-                  <Route path="/day-of" element={<DayOf />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </EventProvider>
-        </ErrorBoundary>
+        <EventProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Header />
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/generating" element={<Generating />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/risk" element={<RiskDashboard />} />
+                <Route path="/budget" element={<BudgetPlanner />} />
+                <Route path="/vendors" element={<Vendors />} />
+                <Route path="/collaboration" element={<Collaboration />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/team" element={<Team />} />
+                <Route path="/day-of" element={<DayOf />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </EventProvider>
       </HelmetProvider>
     </QueryClientProvider>
   </ErrorBoundary>

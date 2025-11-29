@@ -62,7 +62,7 @@ const Generating = () => {
   return (
     <>
       <Helmet>
-        <title>Generating Your Event Plan - SME Event Copilot</title>
+        <title>Generating Your Event Plan - EventPaul</title>
       </Helmet>
       
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">

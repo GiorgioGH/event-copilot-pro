@@ -36,7 +36,7 @@ const Onboarding = () => {
   return (
     <>
       <Helmet>
-        <title>Define Your Event - SME Event Copilot</title>
+        <title>Define Your Event - EventPaul</title>
         <meta name="description" content="Create your corporate event plan with our AI-powered wizard." />
       </Helmet>
       
@@ -48,7 +48,7 @@ const Onboarding = () => {
               onClick={() => navigate('/')}
               className="text-xl font-bold text-foreground hover:text-accent transition-colors"
             >
-              SME Event Copilot
+              EventPaul
             </button>
             <span className="text-sm text-muted-foreground">Step {currentStep} of 3</span>
           </div>

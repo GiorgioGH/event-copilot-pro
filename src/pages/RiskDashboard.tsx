@@ -1,116 +1,46 @@
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import DashboardNav from '@/components/dashboard/DashboardNav';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useEvent } from '@/contexts/EventContext';
+import { analyzeRisks, getWeatherForDate, RiskItem } from '@/lib/riskAnalysis';
+import { loadScrapedVendors } from '@/lib/vendors';
+import { CopilotEvent } from '@/types/event';
+import { loadEventsFromLocalStorage } from '@/lib/events';
+import { getPaulSuggestions } from '@/lib/paulAI';
 import { 
   AlertTriangle, 
+  AlertCircle,
   Clock, 
   DollarSign, 
   Store, 
   CloudRain, 
   Calendar, 
   MapPin,
-  TrendingUp,
   Shield,
-  CheckCircle2
+  CheckCircle2,
+  UtensilsCrossed,
+  Accessibility,
+  Timer,
+  Building,
+  Bot,
+  Lightbulb
 } from 'lucide-react';
 
-const RiskTrendChart = () => {
-  // Generate sample risk data over time
-  const data = [
-    { date: 'Week 1', risk: 85 },
-    { date: 'Week 2', risk: 78 },
-    { date: 'Week 3', risk: 72 },
-    { date: 'Week 4', risk: 68 },
-    { date: 'Week 5', risk: 65 },
-    { date: 'Week 6', risk: 62 },
-    { date: 'Today', risk: 58 },
-  ];
-
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-        <YAxis stroke="hsl(var(--muted-foreground))" domain={[0, 100]} />
-        <Tooltip 
-          contentStyle={{ 
-            backgroundColor: 'hsl(var(--card))', 
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '8px'
-          }} 
-        />
-        <Line 
-          type="monotone" 
-          dataKey="risk" 
-          stroke="hsl(var(--accent))" 
-          strokeWidth={2}
-          dot={{ fill: 'hsl(var(--accent))', r: 4 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  );
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  lunch: UtensilsCrossed,
+  accessibility: Accessibility,
+  timeframe: Timer,
+  venue: Building,
+  weather: CloudRain,
+  budget: DollarSign,
+  schedule: Calendar,
+  tasks: Clock,
+  external: MapPin,
 };
-
-const riskItems = [
-  {
-    id: 'task-delays',
-    type: 'task-delay',
-    title: 'Task Delays',
-    description: '3 tasks overdue — risk high',
-    severity: 'high' as const,
-    icon: Clock,
-    mitigation: 'Reassign tasks to available team members',
-  },
-  {
-    id: 'budget',
-    type: 'budget',
-    title: 'Budget Risk',
-    description: 'Currently at 87% of allocated budget',
-    severity: 'medium' as const,
-    icon: DollarSign,
-    mitigation: 'Review vendor alternatives for cost savings',
-  },
-  {
-    id: 'vendor',
-    type: 'vendor',
-    title: 'Vendor Risk',
-    description: 'Catering not confirmed',
-    severity: 'high' as const,
-    icon: Store,
-    mitigation: 'Contact vendor immediately, prepare backup options',
-  },
-  {
-    id: 'weather',
-    type: 'weather',
-    title: 'Weather Risk',
-    description: '30% chance of rain on event day',
-    severity: 'medium' as const,
-    icon: CloudRain,
-    mitigation: 'Ensure indoor backup venue is available',
-  },
-  {
-    id: 'schedule',
-    type: 'schedule',
-    title: 'Schedule Conflicts',
-    description: 'Speaker A unavailable at 11:00',
-    severity: 'medium' as const,
-    icon: Calendar,
-    mitigation: 'Reschedule session to 14:00 slot',
-  },
-  {
-    id: 'external',
-    type: 'external',
-    title: 'External Events',
-    description: 'City marathon on same day — traffic expected',
-    severity: 'low' as const,
-    icon: MapPin,
-    mitigation: 'Send early arrival notices to attendees',
-  },
-];
 
 const severityColors = {
   low: { bg: 'bg-success/10', border: 'border-success/20', text: 'text-success', badge: 'bg-success/10 text-success border-success/20' },
@@ -119,15 +49,129 @@ const severityColors = {
 };
 
 const RiskDashboard = () => {
+  const { currentPlan, selectedVendors, tasks } = useEvent();
+  const [riskItems, setRiskItems] = useState<RiskItem[]>([]);
+  const [allVendors, setAllVendors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadData = async () => {
+      if (!currentPlan) {
+        setLoading(false);
+        return;
+      }
+      
+      // Load vendors
+      const vendors = await loadScrapedVendors();
+      setAllVendors(vendors);
+      
+      // Get weather for event date
+      const eventDate = currentPlan.basics.dateRange?.start;
+      let weather = null;
+      if (eventDate) {
+        const date = eventDate instanceof Date ? eventDate : new Date(eventDate);
+        weather = await getWeatherForDate(date, currentPlan.basics.location || 'Copenhagen');
+      }
+      
+      // Check schedule conflicts
+      let scheduleConflicts = 0;
+      if (eventDate) {
+        const date = eventDate instanceof Date ? eventDate : new Date(eventDate);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        try {
+          const localEvents = loadEventsFromLocalStorage();
+          const response = await fetch('/events.json');
+          const jsonEvents: CopilotEvent[] = response.ok ? await response.json() : [];
+          
+          const allEvents = [...localEvents, ...jsonEvents];
+          const conflicts = allEvents.filter(e => {
+            if (e.id === currentPlan.id) return false;
+            const eDate = new Date(e.date).toISOString().split('T')[0];
+            return eDate === dateStr;
+          });
+          scheduleConflicts = conflicts.length;
+        } catch (error) {
+          console.error('Error checking schedule conflicts:', error);
+        }
+      }
+      
+      // Analyze risks
+      let risks = analyzeRisks(currentPlan, selectedVendors, vendors, tasks, weather);
+      
+      // Update schedule conflict risk
+      const scheduleRiskIndex = risks.findIndex(r => r.id === 'schedule');
+      if (scheduleRiskIndex >= 0) {
+        if (scheduleConflicts > 0) {
+          risks[scheduleRiskIndex] = {
+            id: 'schedule',
+            type: 'schedule',
+            title: 'Schedule Conflicts',
+            description: `${scheduleConflicts} other event(s) scheduled on the same date`,
+            severity: scheduleConflicts > 1 ? 'high' : 'medium',
+            mitigation: 'Review other events on this date and consider rescheduling if needed',
+          };
+        } else {
+          risks[scheduleRiskIndex] = {
+            id: 'schedule',
+            type: 'schedule',
+            title: 'Schedule Conflicts',
+            description: 'No conflicts detected on event date',
+            severity: 'low',
+            mitigation: undefined,
+          };
+        }
+      }
+      
+      setRiskItems(risks);
+      setLoading(false);
+    };
+    
+    loadData();
+  }, [currentPlan, selectedVendors, tasks]);
+  
+  if (!currentPlan) {
+    return (
+      <>
+        <Helmet>
+          <title>Risk Dashboard - EventPaul</title>
+        </Helmet>
+        <DashboardNav />
+        <main className="container mx-auto px-6 py-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">No Event Selected</h2>
+            <p className="text-muted-foreground">Select an event to view risk analysis.</p>
+          </div>
+        </main>
+      </>
+    );
+  }
+  
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Risk Dashboard - EventPaul</title>
+        </Helmet>
+        <DashboardNav />
+        <main className="container mx-auto px-6 py-8">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading risk analysis...</p>
+          </div>
+        </main>
+      </>
+    );
+  }
+  
   const highRisks = riskItems.filter(r => r.severity === 'high').length;
   const mediumRisks = riskItems.filter(r => r.severity === 'medium').length;
   const lowRisks = riskItems.filter(r => r.severity === 'low').length;
-  const overallScore = 100 - (highRisks * 25 + mediumRisks * 10 + lowRisks * 2);
+  const overallScore = Math.max(0, 100 - (highRisks * 25 + mediumRisks * 10 + lowRisks * 2));
 
   return (
     <>
       <Helmet>
-        <title>Risk Dashboard - SME Event Copilot</title>
+        <title>Risk Dashboard - EventPaul</title>
         <meta name="description" content="Monitor and mitigate risks for your corporate event." />
       </Helmet>
       
@@ -222,23 +266,91 @@ const RiskDashboard = () => {
           </motion.div>
         </div>
 
+        {/* Paul AI Assistant Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8"
+        >
+          <Card className="bg-gradient-to-br from-accent/10 to-primary/5 border-accent/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="w-6 h-6 text-accent" />
+                Paul AI Assistant
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {getPaulSuggestions(riskItems).map((suggestion, index) => {
+                  const priorityColors = {
+                    high: 'border-destructive/30 bg-destructive/10',
+                    medium: 'border-warning/30 bg-warning/10',
+                    low: 'border-success/30 bg-success/10',
+                  };
+                  
+                  return (
+                    <motion.div
+                      key={index}
+                      className={`p-4 rounded-lg border ${priorityColors[suggestion.priority]}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.35 + index * 0.1 }}
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-8 h-8 rounded-full ${priorityColors[suggestion.priority]} flex items-center justify-center shrink-0`}>
+                          {suggestion.priority === 'high' ? (
+                            <AlertCircle className="w-4 h-4 text-destructive" />
+                          ) : suggestion.priority === 'medium' ? (
+                            <Lightbulb className="w-4 h-4 text-warning" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 text-success" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground mb-1">{suggestion.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-3">{suggestion.description}</p>
+                          {suggestion.actionItems.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium text-muted-foreground">Recommended Actions:</p>
+                              <ul className="space-y-1">
+                                {suggestion.actionItems.map((action, actionIndex) => (
+                                  <li key={actionIndex} className="text-sm text-foreground flex items-start gap-2">
+                                    <span className="text-accent mt-1">•</span>
+                                    <span>{action}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Risk Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {riskItems.map((risk, index) => {
             const colors = severityColors[risk.severity];
+            const Icon = iconMap[risk.type] || AlertTriangle;
             return (
               <motion.div
                 key={risk.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
+                transition={{ delay: 0.4 + index * 0.05 }}
               >
                 <Card className={`${colors.bg} ${colors.border} border-2 h-full hover:shadow-md transition-shadow`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}>
-                          <risk.icon className={`w-5 h-5 ${colors.text}`} />
+                          <Icon className={`w-5 h-5 ${colors.text}`} />
                         </div>
                         <CardTitle className="text-base font-semibold text-foreground">
                           {risk.title}
@@ -263,28 +375,6 @@ const RiskDashboard = () => {
             );
           })}
         </div>
-
-        {/* Risk Over Time Chart Placeholder */}
-        <motion.div
-          className="mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-accent" />
-                Risk Over Time
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <RiskTrendChart />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </main>
     </>
   );

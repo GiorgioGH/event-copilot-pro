@@ -36,8 +36,8 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>Login - SME Event Copilot</title>
-        <meta name="description" content="Sign in to your SME Event Copilot account." />
+        <title>Login - EventPaul</title>
+        <meta name="description" content="Sign in to your EventPaul account." />
       </Helmet>
       
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6">
@@ -60,7 +60,7 @@ const Login = () => {
           >
             <Card className="shadow-2xl">
               <CardHeader className="text-center pb-4">
-                <CardTitle className="text-2xl font-bold">SME Event Copilot</CardTitle>
+                <CardTitle className="text-2xl font-bold">EventPaul</CardTitle>
                 <CardDescription>Plan corporate events in minutes</CardDescription>
               </CardHeader>
               <CardContent>

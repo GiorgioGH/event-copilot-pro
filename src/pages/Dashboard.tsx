@@ -10,6 +10,7 @@ import ConfigAssistant from '@/components/chat/ConfigAssistant';
 import { useEvent } from '@/contexts/EventContext';
 import CalendarPanel from '@/components/dashboard/CalendarPanel';
 import SidebarEvents from '@/components/dashboard/SidebarEvents';
+import PastEventsPanel from '@/components/dashboard/PastEventsPanel';
 
 const Dashboard = () => {
   const { currentPlan } = useEvent();
@@ -18,7 +19,7 @@ const Dashboard = () => {
     return (
       <>
         <Helmet>
-          <title>Event Dashboard - SME Event Copilot</title>
+          <title>Event Dashboard - EventPaul</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
@@ -36,7 +37,7 @@ const Dashboard = () => {
   return (
     <>
       <Helmet>
-        <title>{currentPlan.basics.name || 'Event'} Dashboard - SME Event Copilot</title>
+        <title>{currentPlan.basics.name || 'Event'} Dashboard - EventPaul</title>
         <meta name="description" content="Manage your corporate event with AI-powered planning tools." />
       </Helmet>
       
@@ -67,9 +68,9 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - My Events & Tasks */}
           <div className="lg:col-span-1">
-            <SidebarEvents />
-            <div className="mt-6" />
             <TasksTimeline />
+            <div className="mt-6" />
+            <PastEventsPanel />
           </div>
 
           {/* Middle Column - Calendar */}

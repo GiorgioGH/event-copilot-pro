@@ -55,7 +55,7 @@ const Collaboration = () => {
   return (
     <>
       <Helmet>
-        <title>Team Collaboration - SME Event Copilot</title>
+        <title>Team Collaboration - EventPaul</title>
         <meta name="description" content="Collaborate with your team on event planning." />
       </Helmet>
       

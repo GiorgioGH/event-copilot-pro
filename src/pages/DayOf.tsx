@@ -17,9 +17,7 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
-  Bell,
-  MessageSquare,
-  FileText
+  Bell
 } from 'lucide-react';
 
 const contacts = [
@@ -57,7 +55,7 @@ const DayOf = () => {
   return (
     <>
       <Helmet>
-        <title>Day-of Mode - SME Event Copilot</title>
+        <title>Day-of Mode - EventPaul</title>
         <meta name="description" content="Real-time event management for the day of your event." />
       </Helmet>
       
@@ -162,23 +160,6 @@ const DayOf = () => {
           </Card>
         </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-2 gap-4 mb-8"
-        >
-          <Button variant="destructive" size="lg" className="h-16">
-            <AlertTriangle className="w-5 h-5 mr-2" />
-            Report Delay
-          </Button>
-          <Button variant="outline" size="lg" className="h-16">
-            <MessageSquare className="w-5 h-5 mr-2" />
-            Notify Team
-          </Button>
-        </motion.div>
-
         {/* Contacts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -216,37 +197,6 @@ const DayOf = () => {
           </Card>
         </motion.div>
 
-        {/* Contingency Plan */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Card className="border-warning/30 bg-warning/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-warning">
-                <FileText className="w-5 h-5" />
-                AI Contingency Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="p-3 rounded-lg bg-card border border-border">
-                  <p className="font-medium text-foreground mb-1">Weather Backup</p>
-                  <p className="text-muted-foreground">Indoor space reserved at Ballroom B. Contact venue manager to switch.</p>
-                </div>
-                <div className="p-3 rounded-lg bg-card border border-border">
-                  <p className="font-medium text-foreground mb-1">Catering Delay</p>
-                  <p className="text-muted-foreground">Coffee service can be extended. Backup caterer on standby: Gourmet Events.</p>
-                </div>
-                <div className="p-3 rounded-lg bg-card border border-border">
-                  <p className="font-medium text-foreground mb-1">Speaker No-Show</p>
-                  <p className="text-muted-foreground">Team building activity can be moved up. Facilitator briefed.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </main>
     </>
   );

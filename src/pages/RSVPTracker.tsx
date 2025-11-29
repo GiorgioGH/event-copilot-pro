@@ -173,7 +173,7 @@ const RSVPTracker = () => {
   return (
     <>
       <Helmet>
-        <title>RSVP Tracker - SME Event Copilot</title>
+        <title>RSVP Tracker - EventPaul</title>
         <meta name="description" content="Track attendance and manage RSVPs for your corporate event." />
       </Helmet>
       

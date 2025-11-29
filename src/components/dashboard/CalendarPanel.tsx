@@ -241,9 +241,6 @@ export default function CalendarPanel() {
                         <div className="text-xs mb-1">
                           <strong>Budget:</strong> ${evt.budgetUsed?.toLocaleString() ?? 0} / ${evt.budgetTotal?.toLocaleString() ?? 0}
                         </div>
-                        <div className="text-xs mb-1">
-                          <strong>Attendees:</strong> {evt.attendees?.join(', ') ?? 'N/A'}
-                        </div>
                         <Button size="sm" variant="outline" className="mt-1">{isFuture(evt.date) ? 'Edit' : 'View'}</Button>
                       </li>
                     ))

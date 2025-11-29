@@ -27,7 +27,7 @@ const Header = () => {
           onClick={() => navigate('/dashboard')}
           className="text-xl font-bold text-foreground hover:text-accent transition-colors"
         >
-          SME Event Copilot
+          EventPaul
         </button>
 
         <div className="flex items-center gap-3">

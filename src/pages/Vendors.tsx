@@ -82,7 +82,7 @@ const Vendors = () => {
   return (
     <>
       <Helmet>
-        <title>Vendors - SME Event Copilot</title>
+        <title>Vendors - EventPaul</title>
         <meta name="description" content="Compare and select vendors for your corporate event." />
       </Helmet>
       

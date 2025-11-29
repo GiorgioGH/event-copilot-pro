@@ -20,7 +20,7 @@ import {
   Search, 
   Building2, 
   CheckCircle2, 
-  XCircle,
+  XCircle, 
   User,
   Mail,
   UserPlus
@@ -91,7 +91,7 @@ const Team = () => {
     return (
       <>
         <Helmet>
-          <title>Team - SME Event Copilot</title>
+          <title>Team - EventPaul</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
@@ -107,7 +107,7 @@ const Team = () => {
     return (
       <>
         <Helmet>
-          <title>Team - SME Event Copilot</title>
+          <title>Team - EventPaul</title>
         </Helmet>
         <DashboardNav />
         <main className="container mx-auto px-6 py-8">
@@ -123,7 +123,7 @@ const Team = () => {
   return (
     <>
       <Helmet>
-        <title>Team - SME Event Copilot</title>
+        <title>Team - EventPaul</title>
         <meta name="description" content="View team members and attendance by department." />
       </Helmet>
       
@@ -202,13 +202,13 @@ const Team = () => {
         {/* 3-Column Layout: Filter (small) | People (middle) | Departments */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Column 1: Filter (small) */}
-          <motion.div
+        <motion.div
             className="lg:col-span-2"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <Card>
+          transition={{ delay: 0.25 }}
+        >
+                <Card>
               <CardHeader>
                 <CardTitle className="text-base">Filter</CardTitle>
               </CardHeader>
@@ -225,23 +225,23 @@ const Team = () => {
                       <option key={dept} value={dept}>{dept}</option>
                     ))}
                   </select>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                        </div>
+                      </CardContent>
+                    </Card>
+        </motion.div>
 
           {/* Column 2: People List (middle) */}
-          <motion.div
+        <motion.div
             className="lg:col-span-7"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card>
-              <CardHeader>
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card>
+            <CardHeader>
                 <CardTitle>Team Members</CardTitle>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
                 <div className="space-y-2 max-h-[600px] overflow-y-auto">
                   {(selectedDepartment === 'all' 
                     ? allEmployees 
@@ -272,14 +272,14 @@ const Team = () => {
                       </div>
                     );
                   })}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* Column 3: Invitations by Department */}
+          {/* Column 3: Invited People */}
           <motion.div
-            className="lg:col-span-1"
+            className="lg:col-span-3"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.35 }}
@@ -287,42 +287,38 @@ const Team = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-accent" />
-                  Invitations by Department
+                  <Users className="w-5 h-5 text-accent" />
+                  Invited People ({invitedPeople.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(departments)
-                    .sort(([deptA], [deptB]) => {
-                      const aInvited = invitationStats.byDepartment[deptA]?.invited || 0;
-                      const bInvited = invitationStats.byDepartment[deptB]?.invited || 0;
-                      return bInvited - aInvited;
-                    })
-                    .map(([dept, deptEmployees]) => {
-                      const stats = invitationStats.byDepartment[dept] || { total: deptEmployees.length, invited: 0 };
-                      const invitationRate = stats.total > 0 
-                        ? Math.round((stats.invited / stats.total) * 100) 
-                        : 0;
-
+                {invitedPeople.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No people invited yet. Select people from the list to invite them.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                    {invitedPeople.map((personId) => {
+                      const employee = allEmployees.find(e => e.No === personId);
+                      if (!employee) return null;
                       return (
-                        <div key={dept} className="p-4 rounded-lg border border-border bg-card">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h3 className="font-semibold text-foreground">{dept}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {stats.invited} of {stats.total} invited
+                        <div
+                          key={personId}
+                          className="p-3 rounded-lg border border-accent/20 bg-accent/5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-foreground">
+                                {employee['First Name']} {employee['Last Name']}
                               </p>
+                              <p className="text-xs text-muted-foreground">{employee.Department}</p>
                             </div>
-                            <Badge variant={invitationRate >= 50 ? 'default' : invitationRate >= 25 ? 'secondary' : 'outline'}>
-                              {invitationRate}%
-                            </Badge>
                           </div>
-                          <Progress value={invitationRate} className="h-2" />
                         </div>
                       );
                     })}
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

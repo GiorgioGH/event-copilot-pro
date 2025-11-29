@@ -21,8 +21,8 @@ const Settings = () => {
   return (
     <>
       <Helmet>
-        <title>Settings - SME Event Copilot</title>
-        <meta name="description" content="Configure your SME Event Copilot settings." />
+        <title>Settings - EventPaul</title>
+        <meta name="description" content="Configure your EventPaul settings." />
       </Helmet>
       
       <DashboardNav />
