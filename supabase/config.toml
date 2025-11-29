@@ -1,0 +1,4 @@
+project_id = "tcftdouivbvzhhrpxdzx"
+
+[functions.event-copilot-chat]
+verify_jwt = false

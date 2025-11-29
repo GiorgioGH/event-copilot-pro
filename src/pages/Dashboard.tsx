@@ -5,6 +5,7 @@ import TasksTimeline from '@/components/dashboard/TasksTimeline';
 import AgendaPanel from '@/components/dashboard/AgendaPanel';
 import VendorRecommendations from '@/components/dashboard/VendorRecommendations';
 import DashboardNav from '@/components/dashboard/DashboardNav';
+import ConfigAssistant from '@/components/chat/ConfigAssistant';
 
 const Dashboard = () => {
   return (
@@ -45,6 +46,8 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+      
+      <ConfigAssistant />
     </>
   );
 };
