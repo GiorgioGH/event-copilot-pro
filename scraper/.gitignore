@@ -30,6 +30,7 @@ ENV/
 .scrapy/
 *.log
 *.json
+!data/vendors.json
 *.csv
 *.jl
 *.xml

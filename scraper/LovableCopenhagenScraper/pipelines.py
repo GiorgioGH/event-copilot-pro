@@ -4,9 +4,11 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 import re
+import json
+import os
 import logging
 from itemadapter import ItemAdapter
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from scrapy.exceptions import DropItem
 
 logger = logging.getLogger(__name__)
@@ -16,29 +18,37 @@ class ValidationPipeline:
     """
     Pipeline to validate that required fields are not empty.
     Ensures data quality before processing.
+    Handles all vendor types (venues, catering, transport, activities, AV equipment).
     """
     
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
         
-        # Validate required fields
+        # Validate required fields - name is always required
         name = adapter.get('name')
-        address_full = adapter.get('address_full')
-        
         if not name or not name.strip():
             logger.warning(f"Item dropped: Missing 'name' field. URL: {adapter.get('url_source')}")
             raise DropItem(f"Missing required field: name")
         
-        if not address_full or not address_full.strip():
-            logger.warning(f"Item dropped: Missing 'address_full' field. URL: {adapter.get('url_source')}")
-            raise DropItem(f"Missing required field: address_full")
+        # For venues, address is required. For other types, it's optional but preferred
+        vendor_type = adapter.get('vendor_type', 'venue')
+        address_full = adapter.get('address_full')
         
-        # Validate that address contains Copenhagen or Denmark (basic check)
-        address_lower = address_full.lower()
-        if 'copenhagen' not in address_lower and 'denmark' not in address_lower:
-            logger.warning(f"Item dropped: Address does not appear to be in Copenhagen area. "
-                         f"Address: {address_full}, URL: {adapter.get('url_source')}")
-            raise DropItem(f"Address does not appear to be in Copenhagen area: {address_full}")
+        if vendor_type == 'venue':
+            if not address_full or not address_full.strip():
+                logger.warning(f"Venue dropped: Missing 'address_full' field. URL: {adapter.get('url_source')}")
+                raise DropItem(f"Missing required field: address_full for venue")
+            
+            # Validate that venue address contains Copenhagen or Denmark
+            address_lower = address_full.lower()
+            if 'copenhagen' not in address_lower and 'denmark' not in address_lower and 'københavn' not in address_lower:
+                logger.warning(f"Venue dropped: Address does not appear to be in Copenhagen area. "
+                             f"Address: {address_full}, URL: {adapter.get('url_source')}")
+                raise DropItem(f"Address does not appear to be in Copenhagen area: {address_full}")
+        else:
+            # For other vendor types, address is optional but log if missing
+            if not address_full or not address_full.strip():
+                logger.info(f"Vendor {vendor_type} has no address (optional): {name}")
         
         return item
 
@@ -155,21 +165,55 @@ class CleaningPipeline:
 
 class StoragePipeline:
     """
-    Pipeline placeholder for storing cleaned data into a database.
-    Supports PostgreSQL and MongoDB connections.
+    Pipeline for storing cleaned data to a JSON file.
+    Collects all items during scraping and writes them to a JSON file when the spider closes.
+    Also supports PostgreSQL and MongoDB connections (optional).
     """
     
     def __init__(self):
-        # Database connection placeholders
+        # JSON file storage
+        self.items: List[Dict[str, Any]] = []
+        self.json_file_path = None
+        
+        # Database connection placeholders (optional)
         self.db_connection = None
         self.db_type = None  # 'postgresql' or 'mongodb'
     
     def open_spider(self, spider):
         """
-        Initialize database connection when spider opens.
-        Configure your database connection here.
+        Initialize storage when spider opens.
+        Sets up JSON file path and optionally database connection.
         """
-        # Example PostgreSQL connection (uncomment and configure)
+        # Determine JSON file path (relative to scraper directory)
+        # Get the project root directory (scraper/LovableCopenhagenScraper)
+        project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Create data directory if it doesn't exist
+        data_dir = os.path.join(project_dir, 'data')
+        os.makedirs(data_dir, exist_ok=True)
+        
+        # Set JSON file path - stores all vendor types
+        self.json_file_path = os.path.join(data_dir, 'vendors.json')
+        
+        # Load existing vendors if file exists (to avoid duplicates)
+        if os.path.exists(self.json_file_path):
+            try:
+                with open(self.json_file_path, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                    if isinstance(existing_data, list):
+                        self.items = existing_data
+                        logger.info(f"Loaded {len(self.items)} existing vendors from {self.json_file_path}")
+                    else:
+                        self.items = []
+            except (json.JSONDecodeError, IOError) as e:
+                logger.warning(f"Could not load existing JSON file: {e}. Starting fresh.")
+                self.items = []
+        else:
+            self.items = []
+        
+        logger.info(f"StoragePipeline initialized. JSON file: {self.json_file_path}")
+        
+        # Optional: Database connection setup (uncomment if needed)
+        # Example PostgreSQL connection:
         # import psycopg2
         # self.db_connection = psycopg2.connect(
         #     host="localhost",
@@ -179,19 +223,49 @@ class StoragePipeline:
         # )
         # self.db_type = 'postgresql'
         
-        # Example MongoDB connection (uncomment and configure)
+        # Example MongoDB connection:
         # from pymongo import MongoClient
         # self.db_connection = MongoClient('mongodb://localhost:27017/')
         # self.db = self.db_connection['event_copilot']
         # self.collection = self.db['venues']
         # self.db_type = 'mongodb'
-        
-        logger.info("StoragePipeline initialized. Configure database connection in open_spider() method.")
     
     def close_spider(self, spider):
         """
-        Close database connection when spider closes.
+        Write all collected items to JSON file when spider closes.
+        Also closes database connection if configured.
         """
+        # Write items to JSON file
+        if self.json_file_path:
+            try:
+                # Remove duplicates based on url_source
+                seen_urls = set()
+                unique_items = []
+                for item in self.items:
+                    url = item.get('url_source')
+                    if url and url not in seen_urls:
+                        seen_urls.add(url)
+                        unique_items.append(item)
+                    elif not url:
+                        # Keep items without URL (shouldn't happen, but just in case)
+                        unique_items.append(item)
+                
+                # Write to JSON file with pretty formatting
+                with open(self.json_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(unique_items, f, indent=2, ensure_ascii=False)
+                
+                # Count by vendor type for logging
+                vendor_counts = {}
+                for item in unique_items:
+                    vtype = item.get('vendor_type', 'unknown')
+                    vendor_counts[vtype] = vendor_counts.get(vtype, 0) + 1
+                
+                logger.info(f"Successfully wrote {len(unique_items)} vendors to {self.json_file_path}")
+                logger.info(f"Vendor breakdown: {vendor_counts}")
+            except Exception as e:
+                logger.error(f"Error writing to JSON file: {e}")
+        
+        # Close database connection if configured
         if self.db_connection and self.db_type == 'postgresql':
             self.db_connection.close()
             logger.info("PostgreSQL connection closed.")
@@ -201,13 +275,20 @@ class StoragePipeline:
     
     def process_item(self, item, spider):
         """
-        Store the item in the database.
+        Store the item in memory (will be written to JSON on close).
+        Optionally also store in database if configured.
         """
         adapter = ItemAdapter(item)
         
         # Convert item to dictionary
         item_dict = dict(adapter)
         
+        # Add to items list for JSON storage
+        self.items.append(item_dict)
+        vendor_type = item_dict.get('vendor_type', 'unknown')
+        logger.info(f"Collected {vendor_type} vendor for JSON storage: {item_dict['name']}")
+        
+        # Optional: Also store in database if configured
         # PostgreSQL storage example
         if self.db_type == 'postgresql' and self.db_connection:
             try:
@@ -249,12 +330,6 @@ class StoragePipeline:
                 logger.info(f"Stored venue in MongoDB: {item_dict['name']}")
             except Exception as e:
                 logger.error(f"Error storing item in MongoDB: {e}")
-        
-        # If no database configured, just log the item
-        else:
-            logger.info(f"Item ready for storage (database not configured): {item_dict['name']}")
-            # Optionally, you could write to JSON/CSV file here
-            # Or integrate with your Supabase backend
         
         return item
 

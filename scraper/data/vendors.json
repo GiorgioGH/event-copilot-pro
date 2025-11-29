@@ -1,0 +1,197 @@
+[
+  {
+    "vendor_type": "catering",
+    "url_source": "https://venuu.com/dk/en/corporate-event-copenhagen",
+    "name": "Venues for Corporate Events in Copenhagen",
+    "address_full": null,
+    "description": "Find venues for corporate events in Copenhagen. Best prices, easy to book! The best online booking site in Denmark for event and meeting venues – Venuu.com.",
+    "cuisine_types": [],
+    "service_types": [
+      "lunch",
+      "dinner"
+    ],
+    "phone": "2262355678",
+    "email": null,
+    "images": [
+      "https://files.venuu.se/attachments/000/154/372/fec33ba24ec7fa461f98900d0e4101c38f4fb309.jpg",
+      "https://files.venuu.se/attachments/000/254/713/4d3223c635884fd3de70c72b7a6cdb27cb35b0ca.jpg",
+      "https://files.venuu.se/attachments/000/255/389/b2ad07fd1cb9e841fb76dd478f792ea18abdb48c.jpg",
+      "https://files.venuu.se/attachments/000/186/946/095abfefa42983a8fab8191d729bbf2c226a0995.jpg",
+      "https://files.venuu.se/attachments/000/317/789/5ea1618d74f52a43c2988fc70fb0d7bc99ab8570.jpg"
+    ]
+  },
+  {
+    "vendor_type": "venue",
+    "url_source": "https://www.tivolihotel.com/conferences-meetings-events/meeting-rooms-copenhagen",
+    "name": "Meeting rooms",
+    "address_full": "Arni Magnussons Gade 2, Copenhagen V, 1577, DK",
+    "description": "Explore Tivoli Hotel & Congress Center's tailor-made meeting rooms for all types of events in the heart of Copenhagen. Contact us for a quote.",
+    "event_types": [
+      "Conference",
+      "Exhibition"
+    ],
+    "base_package_price": null,
+    "in_house_av": true,
+    "amenities": [],
+    "parking_available": true,
+    "wifi_available": false,
+    "accessibility": false,
+    "phone": "37971591872782",
+    "email": "tivolihotel@arp-hansen.dk",
+    "website": "https://www.tivolihotel.com/conferences-meetings-events/meeting-rooms-copenhagen",
+    "images": [
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/gb.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/dk.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/gb.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/se.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/no.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/gb.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/dk.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/gb.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/se.svg",
+      "https://www.tivolihotel.com/Assets/AHHG/Images/flags/no.svg"
+    ]
+  },
+  {
+    "vendor_type": "av-equipment",
+    "url_source": "https://www.soundlight.dk",
+    "name": "soundlight.dk is hosted by",
+    "address_full": null,
+    "equipment_types": [],
+    "delivery_available": false,
+    "setup_service": false,
+    "technical_support": true,
+    "phone": "+0102-0103"
+  },
+  {
+    "vendor_type": "catering",
+    "url_source": "https://tapas-bar.dk/catering/",
+    "name": "Catering",
+    "address_full": null,
+    "description": null,
+    "cuisine_types": [],
+    "service_types": [],
+    "phone": "83329968",
+    "email": "info@tapas-bar.dk",
+    "images": [
+      "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20150%20175'%3E%3C/svg%3E",
+      "https://tapas-bar.dk/wp-content/uploads/2022/10/logonyt-2373.png",
+      "https://tapas-bar.dk/wp-content/plugins/sitepress-multilingual-cms/res/flags/da.svg",
+      "https://tapas-bar.dk/wp-content/plugins/sitepress-multilingual-cms/res/flags/en.svg",
+      "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20193%2051'%3E%3C/svg%3E"
+    ]
+  },
+  {
+    "vendor_type": "catering",
+    "url_source": "https://bredgade28.dk/",
+    "name": "Lokaler",
+    "address_full": null,
+    "description": "I hjertet af København, i byens herskabelige kvarter, Frederikstaden, ligger Odd Fellow Palæet. Med sin opførelse i 1751 bærer de smukke lokaler præg af rokokostilen med prægtige sale og flere århundreders lang historie. Bare få minutter fra Kongens Nytorv, udsigt til Kongens Have, et naboskab med Amalienborg og Marmorkirken ligger palæet som perlen på snoren af smukke seværdigheder i området.",
+    "cuisine_types": [],
+    "service_types": [],
+    "phone": "2023-10-23",
+    "email": "Info@bredgade28.dk",
+    "images": [
+      "https://www.facebook.com/tr?id=3231009760346133&ev=PageView&noscript=1",
+      "https://bredgade28.dk/wp-content/uploads/2020/03/logo_udenpayoff_stor_hvid-261x300.png",
+      "https://bredgade28.dk/wp-content/uploads/2020/03/filnavn_uden_endelse99-1024x683.jpg",
+      "https://bredgade28.dk/wp-content/uploads/2020/08/Line.Kongeskov.Wedding.220619.13.1307.jpg",
+      "https://bredgade28.dk/wp-content/uploads/2020/04/Slethvar_fra_Langø_med_fennikelpuré_brunet_smør_med_dild_og_sprød_crouton_på_brickdej_thumb-1024x649.jpg"
+    ]
+  },
+  {
+    "vendor_type": "activities",
+    "url_source": "https://teambuilding.dk/",
+    "name": "Teambuilding.dk - Teambuilding aktiviteter i hele landet - 1.500+",
+    "address_full": null,
+    "activity_types": [],
+    "phone": "1471686432"
+  },
+  {
+    "vendor_type": "av-equipment",
+    "url_source": "https://www.spacebase.com/en/venue/daylight-studio-1061969/",
+    "name": "Production Studios - Daylight Studio",
+    "address_full": null,
+    "equipment_types": [],
+    "delivery_available": false,
+    "setup_service": false,
+    "technical_support": true,
+    "phone": "79633910114"
+  },
+  {
+    "vendor_type": "catering",
+    "url_source": "https://www.spacebase.com/en/venue/restaurant-asador-wine-cellar-1068/",
+    "name": "Restaurant Asador Wine Cellar - Wine Cellar",
+    "address_full": null,
+    "description": "Organize your meeting at Restaurant Asador Wine Cellar Wine Cellar in Copenhagen | Book online in just 3 easy steps with no extra fees",
+    "cuisine_types": [],
+    "service_types": [],
+    "phone": "79633910114",
+    "email": null,
+    "images": [
+      "https://www.facebook.com/tr?id=1030111039117229&ev=PageView&noscript=1",
+      "https://media.spacebase.com/img/spaces/1068/1068-19398.png?w=1280",
+      "https://media.spacebase.com/static/svg/icon-infomation.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/svg/pricing_per_hour.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/payments/svg/payment_method_001.svg?cv=f6b0a2ff7a18"
+    ]
+  },
+  {
+    "vendor_type": "catering",
+    "url_source": "https://www.spacebase.com/en/venue/restaurant-fuego-1067/",
+    "name": "Restaurant Fuego - Dining and event space",
+    "address_full": null,
+    "description": "Organize your meeting at Restaurant Fuego Dining and event space in Copenhagen | Book online in just 3 easy steps with no extra fees",
+    "cuisine_types": [],
+    "service_types": [
+      "dinner"
+    ],
+    "phone": "79633910114",
+    "email": null,
+    "images": [
+      "https://www.facebook.com/tr?id=1030111039117229&ev=PageView&noscript=1",
+      "https://media.spacebase.com/img/spaces/1067/1067-19358.jpg?w=1280",
+      "https://media.spacebase.com/static/svg/icon-infomation.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/svg/pricing_per_hour.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/payments/svg/payment_method_001.svg?cv=f6b0a2ff7a18"
+    ]
+  },
+  {
+    "vendor_type": "catering",
+    "url_source": "https://www.spacebase.com/en/venue/restaurant-maven-restaurant-and-wine-bar-327/",
+    "name": "Restaurant Maven - Restaurant and Wine Bar - Restaurant and Wine Bar",
+    "address_full": null,
+    "description": "Organize your meeting at Restaurant Maven - Restaurant and Wine Bar Restaurant and Wine Bar in Copenhagen | Book online in just 3 easy steps with no extra fees",
+    "cuisine_types": [],
+    "service_types": [
+      "dinner"
+    ],
+    "phone": "79633910114",
+    "email": null,
+    "images": [
+      "https://www.facebook.com/tr?id=1030111039117229&ev=PageView&noscript=1",
+      "https://media.spacebase.com/img/spaces/327/327-3155.png?w=1280",
+      "https://media.spacebase.com/static/svg/icon-infomation.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/svg/pricing_per_day.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/payments/svg/payment_method_001.svg?cv=f6b0a2ff7a18"
+    ]
+  },
+  {
+    "vendor_type": "catering",
+    "url_source": "https://www.spacebase.com/en/venue/restaurant-viva-296/",
+    "name": "Restaurant Viva - Restaurant",
+    "address_full": null,
+    "description": "Organize your meeting at Restaurant Viva Restaurant in Copenhagen | Book online in just 3 easy steps with no extra fees",
+    "cuisine_types": [],
+    "service_types": [],
+    "phone": "79633910114",
+    "email": null,
+    "images": [
+      "https://www.facebook.com/tr?id=1030111039117229&ev=PageView&noscript=1",
+      "https://media.spacebase.com/img/spaces/296/296-2786.png?w=1280",
+      "https://media.spacebase.com/static/svg/icon-infomation.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/payments/svg/payment_method_001.svg?cv=f6b0a2ff7a18",
+      "https://media.spacebase.com/static/payments/svg/payment_method_002.svg?cv=f6b0a2ff7a18"
+    ]
+  }
+]

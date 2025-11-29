@@ -1,16 +1,25 @@
 # LovableCopenhagenScraper
 
-A Scrapy-based web scraping project for collecting detailed venue data for corporate event planning in the Copenhagen Metropolitan Area, Denmark.
+A comprehensive Scrapy-based web scraping project for collecting detailed event planning vendor data in the Copenhagen Metropolitan Area, Denmark.
 
 ## Project Overview
 
-This scraper collects comprehensive venue information including:
-- Venue names and addresses
-- Capacity ranges (min-max)
-- Supported event types
-- In-house A/V equipment availability
-- Base package pricing
-- Source URLs
+This scraper collects comprehensive data for all event planning vendors:
+
+**Venues** - Expanded fields including:
+- Names, addresses, descriptions
+- Capacity ranges, number of rooms
+- Event types, amenities
+- In-house A/V, parking, WiFi, accessibility
+- Pricing, contact info, images, ratings
+
+**Catering Services** - Cuisine types, service types, dietary options, pricing
+
+**Transportation** - Vehicle types, capacity, service area, pricing
+
+**Activities & Entertainment** - Activity types, participant limits, duration, pricing
+
+**AV Equipment Rental** - Equipment types, delivery/setup services, pricing
 
 ## Ethical Scraping Practices
 
@@ -62,25 +71,27 @@ scraper/
 
 ### Basic Usage
 
-1. **Edit the spider** (`LovableCopenhagenScraper/spiders/copenhagen_venue_spider.py`):
-   - Add your target venue website URLs to `start_urls`
-   - Customize CSS selectors and XPath expressions based on website structure
-   - Add domains to `allowed_domains` list
+The spider is pre-configured with comprehensive start URLs for all vendor types. Just run it!
 
-2. **Run the spider:**
+1. **Run the comprehensive spider:**
    ```bash
-   cd scraper/LovableCopenhagenScraper
-   scrapy crawl copenhagen_venue_spider
+   cd scraper
+   scrapy crawl copenhagen_event_vendor_spider
    ```
 
-3. **Save output to JSON:**
-   ```bash
-   scrapy crawl copenhagen_venue_spider -o venues.json
-   ```
+   This will scrape:
+   - **Venues** (with expanded fields: description, amenities, images, contact info, ratings, etc.)
+   - **Catering services**
+   - **Transportation services**
+   - **Activities & Entertainment**
+   - **AV Equipment rental**
 
-4. **Save output to CSV:**
+2. **Output:**
+   All scraped data is automatically saved to `scraper/data/vendors.json` when the spider finishes.
+
+3. **Optional: Save additional output:**
    ```bash
-   scrapy crawl copenhagen_venue_spider -o venues.csv
+   scrapy crawl copenhagen_event_vendor_spider -o additional_output.json
    ```
 
 ### Advanced Usage
@@ -131,18 +142,39 @@ The project includes three pipelines:
 
 ## Output Format
 
-Each scraped venue item contains:
+The scraper collects data for all vendor types. Each item includes a `vendor_type` field:
+
+**Venue items** include:
 ```json
 {
+  "vendor_type": "venue",
   "name": "Venue Name",
   "address_full": "Street Address, Copenhagen, Denmark",
+  "description": "Full description...",
   "capacity_min_max": "100 - 300",
+  "number_of_rooms": "5",
   "event_types": ["Conference", "Gala Dinner", "Product Launch"],
+  "amenities": ["WiFi", "Parking", "Catering"],
   "in_house_av": true,
+  "parking_available": true,
+  "wifi_available": true,
+  "accessibility": "Wheelchair accessible",
   "base_package_price": "From 5000 DKK",
+  "phone": "+45 12 34 56 78",
+  "email": "contact@venue.dk",
+  "images": ["https://..."],
+  "rating": 4.5,
   "url_source": "https://venue-website.dk/venue-page"
 }
 ```
+
+**Catering items** include: `name`, `address_full`, `cuisine_types`, `service_types`, `dietary_options`, `price_per_person`, etc.
+
+**Transport items** include: `name`, `vehicle_types`, `price_per_hour`, `service_area`, etc.
+
+**Activities items** include: `name`, `activity_types`, `min_participants`, `max_participants`, `duration`, etc.
+
+**AV Equipment items** include: `name`, `equipment_types`, `delivery_available`, `setup_service`, etc.
 
 ## JavaScript Rendering
 
