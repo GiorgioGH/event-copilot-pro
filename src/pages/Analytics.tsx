@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -5,6 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import DashboardNav from '@/components/dashboard/DashboardNav';
+import { useEvent } from '@/contexts/EventContext';
+import { 
+  loadEmployees, 
+  simulateAttendance, 
+  calculateAnalytics,
+  EmployeeWithAttendance 
+} from '@/lib/people';
 import { 
   BarChart3, 
   Users, 
@@ -15,33 +23,106 @@ import {
   DollarSign,
   Target,
   Download,
-  ThumbsUp
+  ThumbsUp,
+  Building2
 } from 'lucide-react';
 
-const attendanceMetrics = [
-  { label: 'Registered', value: 150, icon: Users },
-  { label: 'Attended', value: 142, icon: Users },
-  { label: 'No-shows', value: 8, icon: Clock },
-  { label: 'Late Arrivals', value: 12, icon: Clock },
-];
-
-const engagementData = [
-  { session: 'Opening Keynote', engagement: 95 },
-  { session: 'Strategy Workshop', engagement: 88 },
-  { session: 'Innovation Lab', engagement: 82 },
-  { session: 'Team Building', engagement: 91 },
-  { session: 'Networking', engagement: 78 },
-];
-
-const roiMetrics = [
-  { label: 'Cost Per Head', value: '$85', benchmark: '$95', isGood: true },
-  { label: 'Engagement/Cost', value: '1.2', benchmark: '1.0', isGood: true },
-  { label: 'Impact Score', value: '8.7/10', benchmark: '7.5/10', isGood: true },
-];
-
 const Analytics = () => {
-  const satisfactionScore = 4.6;
-  const attendanceRate = Math.round((142 / 150) * 100);
+  const { currentPlan } = useEvent();
+  const [employees, setEmployees] = useState<EmployeeWithAttendance[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadEmployees().then(allEmployees => {
+      if (allEmployees.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      const participants = currentPlan?.basics.participants || 100;
+      const employeesWithAttendance = simulateAttendance(allEmployees, participants);
+      setEmployees(employeesWithAttendance);
+      
+      const calculated = calculateAnalytics(employeesWithAttendance);
+      setAnalytics(calculated);
+      setLoading(false);
+    });
+  }, [currentPlan?.basics.participants]);
+
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Post-Event Analytics - SME Event Copilot</title>
+        </Helmet>
+        <DashboardNav />
+        <main className="container mx-auto px-6 py-8">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading analytics...</p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <>
+        <Helmet>
+          <title>Post-Event Analytics - SME Event Copilot</title>
+        </Helmet>
+        <DashboardNav />
+        <main className="container mx-auto px-6 py-8">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No analytics data available. Create an event first.</p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const satisfactionScore = analytics.avgSatisfaction || 4.6;
+  const attendanceRate = analytics.attendanceRate;
+  
+  // Calculate peak check-in time
+  const checkInTimes = employees
+    .filter(e => e.checkInTime)
+    .map(e => {
+      const [hour, minute] = e.checkInTime!.split(':').map(Number);
+      return hour * 60 + minute; // Convert to minutes
+    });
+  const avgCheckInMinutes = checkInTimes.length > 0
+    ? checkInTimes.reduce((a, b) => a + b, 0) / checkInTimes.length
+    : 8 * 60 + 30; // Default 8:30 AM
+  const peakHour = Math.floor(avgCheckInMinutes / 60);
+  const peakMinute = Math.round(avgCheckInMinutes % 60);
+  const peakCheckInTime = `${peakHour}:${peakMinute.toString().padStart(2, '0')} ${peakHour >= 12 ? 'PM' : 'AM'}`;
+
+  const attendanceMetrics = [
+    { label: 'Registered', value: analytics.invited, icon: Users },
+    { label: 'Attended', value: analytics.attended, icon: Users },
+    { label: 'No-shows', value: analytics.noShows, icon: Clock },
+    { label: 'Late Arrivals', value: analytics.lateArrivals, icon: Clock },
+  ];
+
+  // Generate engagement data based on attendance
+  const engagementData = [
+    { session: 'Opening Keynote', engagement: Math.min(95, 70 + analytics.attendanceRate * 0.25) },
+    { session: 'Strategy Workshop', engagement: Math.min(92, 65 + analytics.attendanceRate * 0.27) },
+    { session: 'Innovation Lab', engagement: Math.min(88, 60 + analytics.attendanceRate * 0.28) },
+    { session: 'Team Building', engagement: Math.min(94, 75 + analytics.attendanceRate * 0.19) },
+    { session: 'Networking', engagement: Math.min(85, 55 + analytics.attendanceRate * 0.30) },
+  ];
+
+  const totalCost = currentPlan?.estimatedCost || 10000;
+  const costPerHead = analytics.attended > 0 ? totalCost / analytics.attended : 0;
+
+  const roiMetrics = [
+    { label: 'Cost Per Head', value: `$${Math.round(costPerHead)}`, benchmark: '$95', isGood: costPerHead < 95 },
+    { label: 'Engagement/Cost', value: (analytics.attendanceRate / 100 / (costPerHead / 100)).toFixed(2), benchmark: '1.0', isGood: true },
+    { label: 'Impact Score', value: `${(satisfactionScore * 2).toFixed(1)}/10`, benchmark: '7.5/10', isGood: satisfactionScore * 2 >= 7.5 },
+  ];
 
   return (
     <>
@@ -119,16 +200,36 @@ const Analytics = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                     <span className="text-sm text-foreground">QR Code Check-ins</span>
-                    <Badge variant="secondary">128 scans</Badge>
+                    <Badge variant="secondary">{analytics.qrCheckIns} scans</Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                     <span className="text-sm text-foreground">Manual Check-ins</span>
-                    <Badge variant="secondary">14 entries</Badge>
+                    <Badge variant="secondary">{analytics.manualCheckIns} entries</Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                     <span className="text-sm text-foreground">Peak Check-in Time</span>
-                    <Badge variant="secondary">8:45 AM</Badge>
+                    <Badge variant="secondary">{peakCheckInTime}</Badge>
                   </div>
+                  
+                  {/* Department Breakdown */}
+                  {Object.keys(analytics.byDepartment).length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">By Department</p>
+                      <div className="space-y-2">
+                        {Object.entries(analytics.byDepartment)
+                          .sort(([, a], [, b]) => b.attended - a.attended)
+                          .slice(0, 5)
+                          .map(([dept, stats]) => (
+                            <div key={dept} className="flex items-center justify-between text-xs">
+                              <span className="text-foreground truncate flex-1">{dept}</span>
+                              <span className="text-muted-foreground ml-2">
+                                {stats.attended}/{stats.invited}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

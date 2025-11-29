@@ -16,6 +16,7 @@ import BudgetPlanner from "./pages/BudgetPlanner";
 import Vendors from "./pages/Vendors";
 import Collaboration from "./pages/Collaboration";
 import Analytics from "./pages/Analytics";
+import Team from "./pages/Team";
 import DayOf from "./pages/DayOf";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/vendors" element={<Vendors />} />
               <Route path="/collaboration" element={<Collaboration />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/team" element={<Team />} />
               <Route path="/day-of" element={<DayOf />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />

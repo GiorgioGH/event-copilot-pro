@@ -16,7 +16,7 @@ const navItems = [
   { to: '/risk', label: 'Risk Dashboard', icon: AlertTriangle },
   { to: '/budget', label: 'Budget Planner', icon: DollarSign },
   { to: '/vendors', label: 'Vendors', icon: Store },
-  { to: '/collaboration', label: 'Team', icon: Users },
+  { to: '/team', label: 'Team', icon: Users },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/day-of', label: 'Day-of Mode', icon: Smartphone },
 ];
