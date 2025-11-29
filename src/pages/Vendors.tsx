@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardNav from '@/components/dashboard/DashboardNav';
+import { useEvent } from '@/contexts/EventContext';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Store, 
   Star, 
@@ -19,19 +21,11 @@ import {
   Building,
   UtensilsCrossed,
   Bus,
-  Speaker
+  Speaker,
+  Loader2
 } from 'lucide-react';
 import { Vendor } from '@/types/event';
-
-const allVendors: Vendor[] = [
-  { id: '1', name: 'Grand Conference Center', type: 'venue', image: '', priceEstimate: 5000, location: '2.3 miles', rating: 4.8, fitScore: 95, capacity: 200, amenities: ['WiFi', 'Parking', 'Catering Kitchen', 'AV Equipment'], availability: true },
-  { id: '2', name: 'Downtown Convention Hall', type: 'venue', image: '', priceEstimate: 7500, location: '1.2 miles', rating: 4.6, fitScore: 88, capacity: 350, amenities: ['WiFi', 'Parking', 'Stage'], availability: true },
-  { id: '3', name: 'Innovation Hub', type: 'venue', image: '', priceEstimate: 3500, location: '4.5 miles', rating: 4.4, fitScore: 82, capacity: 100, amenities: ['WiFi', 'Coffee Bar'], availability: false },
-  { id: '4', name: 'Elite Catering Co.', type: 'catering', image: '', priceEstimate: 2500, location: 'On-site', rating: 4.9, fitScore: 92, availability: true },
-  { id: '5', name: 'Gourmet Events', type: 'catering', image: '', priceEstimate: 3200, location: 'On-site', rating: 4.7, fitScore: 89, availability: true },
-  { id: '6', name: 'City Shuttle Services', type: 'transport', image: '', priceEstimate: 800, location: 'Citywide', rating: 4.5, fitScore: 85, availability: true },
-  { id: '7', name: 'TechAV Solutions', type: 'av-equipment', image: '', priceEstimate: 1200, location: '5.1 miles', rating: 4.6, fitScore: 88, availability: true },
-];
+import { loadScrapedVendors, getVendorsByType } from '@/lib/vendors';
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   venue: Building,
@@ -41,21 +35,41 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const Vendors = () => {
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
+  const { selectedVendors, setSelectedVendors } = useEvent();
   const [compareMode, setCompareMode] = useState(false);
+  const [allVendors, setAllVendors] = useState<Vendor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadScrapedVendors().then(vendors => {
+      setAllVendors(vendors);
+      setLoading(false);
+    });
+  }, []);
 
   const toggleVendor = (id: string) => {
-    setSelectedVendors(prev => 
-      prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]
-    );
+    setSelectedVendors(prev => {
+      const isSelected = prev.includes(id);
+      const vendor = allVendors.find(v => v.id === id);
+      
+      if (isSelected) {
+        toast({
+          title: "Vendor Removed",
+          description: `${vendor?.name} has been removed from your selection.`,
+        });
+        return prev.filter(v => v !== id);
+      } else {
+        toast({
+          title: "Vendor Selected",
+          description: `${vendor?.name} has been added to your event plan.`,
+        });
+        return [...prev, id];
+      }
+    });
   };
 
-  const vendorsByType = {
-    venue: allVendors.filter(v => v.type === 'venue'),
-    catering: allVendors.filter(v => v.type === 'catering'),
-    transport: allVendors.filter(v => v.type === 'transport'),
-    'av-equipment': allVendors.filter(v => v.type === 'av-equipment'),
-  };
+  const vendorsByType = getVendorsByType(allVendors);
 
   const selectedForComparison = allVendors.filter(v => selectedVendors.includes(v.id));
 
@@ -77,7 +91,10 @@ const Vendors = () => {
         >
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Vendor Selection</h1>
-            <p className="text-muted-foreground">Compare and select the best vendors for your event</p>
+            <p className="text-muted-foreground">
+              Compare and select the best vendors for your event
+              {!loading && <span className="ml-2 text-accent">({allVendors.length} vendors available)</span>}
+            </p>
           </div>
           {selectedVendors.length >= 2 && (
             <Button variant="accent" onClick={() => setCompareMode(!compareMode)}>
@@ -86,6 +103,26 @@ const Vendors = () => {
             </Button>
           )}
         </motion.div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            <span className="ml-3 text-muted-foreground">Loading vendors...</span>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && allVendors.length === 0 && (
+          <Card className="p-12 text-center">
+            <CardContent>
+              <p className="text-muted-foreground mb-4">No vendors found.</p>
+              <p className="text-sm text-muted-foreground">
+                Run the scraper to collect vendor data: <code className="bg-secondary px-2 py-1 rounded">cd scraper && scrapy crawl copenhagen_event_vendor_spider</code>
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Comparison Table */}
         {compareMode && selectedForComparison.length >= 2 && (
@@ -191,8 +228,15 @@ const Vendors = () => {
             </TabsTrigger>
           </TabsList>
 
-          {Object.entries(vendorsByType).map(([type, vendors]) => (
+          {!loading && Object.entries(vendorsByType).map(([type, vendors]) => (
             <TabsContent key={type} value={type}>
+              {vendors.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <CardContent>
+                    <p className="text-muted-foreground">No {type} vendors found.</p>
+                  </CardContent>
+                </Card>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {vendors.map((vendor, index) => {
                   const Icon = typeIcons[vendor.type] || Store;
@@ -294,6 +338,7 @@ const Vendors = () => {
                   );
                 })}
               </div>
+              )}
             </TabsContent>
           ))}
         </Tabs>

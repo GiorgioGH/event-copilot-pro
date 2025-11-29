@@ -15,7 +15,7 @@ const analysisSteps = [
 
 const Generating = () => {
   const navigate = useNavigate();
-  const { setIsGenerating, eventBasics, eventRequirements, eventSpecialConditions, setCurrentPlan } = useEvent();
+  const { setIsGenerating, eventBasics, eventRequirements, eventSpecialConditions, createEvent } = useEvent();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
@@ -26,17 +26,18 @@ const Generating = () => {
       if (index >= analysisSteps.length) {
         // All steps complete, generate mock plan and navigate
         setTimeout(() => {
-          setCurrentPlan({
+          const plan = {
             id: `event-${Date.now()}`,
             basics: eventBasics as any,
             requirements: eventRequirements as any,
             specialConditions: eventSpecialConditions as any,
-            riskScore: 'low',
+            riskScore: 'low' as const,
             estimatedCost: eventBasics.budget ? eventBasics.budget * 0.85 : 10000,
-            status: 'planning',
+            status: 'planning' as const,
             createdAt: new Date(),
             updatedAt: new Date(),
-          });
+          };
+          createEvent(plan);
           setIsGenerating(false);
           navigate('/dashboard');
         }, 500);

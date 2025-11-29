@@ -26,19 +26,10 @@ interface ConfigAssistantProps {
 
 const ConfigAssistant = ({ onBudgetUpdate }: ConfigAssistantProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Good day. I am your Configuration Assistant for event planning. I can help you adjust budget allocations, update participant counts, modify equipment requirements, and analyze the impact of changes on your event. How may I assist you today?',
-      timestamp: new Date(),
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
   const { 
+    currentPlan,
+    selectedVendors,
+    tasks,
     eventBasics, 
     setEventBasics, 
     eventRequirements, 
@@ -46,6 +37,73 @@ const ConfigAssistant = ({ onBudgetUpdate }: ConfigAssistantProps) => {
     eventSpecialConditions,
     setEventSpecialConditions
   } = useEvent();
+
+  const getInitialMessage = (): string => {
+    if (!currentPlan) {
+      return 'Hello! I am your Event Planning Assistant. Create an event first, and I can help you with planning, vendor selection, tasks, and budget management.';
+    }
+    
+    const plan = currentPlan;
+    const selectedCount = selectedVendors.length;
+    const tasksCount = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    
+    let advice = `Hello! I'm here to help you plan "${plan.basics.name || 'your event'}". `;
+    
+    // Provide specific advice based on event state
+    const advicePoints: string[] = [];
+    
+    if (selectedCount === 0) {
+      advicePoints.push('You haven\'t selected any vendors yet. I recommend selecting a venue first.');
+    } else if (selectedCount < 3) {
+      advicePoints.push(`You have ${selectedCount} vendor(s) selected. Consider adding more vendors for a complete event setup.`);
+    }
+    
+    if (tasksCount === 0) {
+      advicePoints.push('No tasks have been created. I can help you identify what needs to be done.');
+    } else if (completedTasks < tasksCount) {
+      advicePoints.push(`You have ${completedTasks} of ${tasksCount} tasks completed. Keep up the progress!`);
+    }
+    
+    if (plan.status === 'draft') {
+      advicePoints.push('Your event is still in draft. Consider finalizing vendor selections and confirming bookings.');
+    }
+    
+    if (plan.riskScore === 'high') {
+      advicePoints.push('⚠️ Your event has high risk factors. Let me know what you need help with to mitigate risks.');
+    }
+    
+    if (advicePoints.length > 0) {
+      advice += '\n\nHere\'s what I noticed:\n' + advicePoints.map(p => `• ${p}`).join('\n');
+    } else {
+      advice += 'Your event planning looks good! How can I help you today?';
+    }
+    
+    advice += '\n\nI can help you with:\n• Selecting and comparing vendors\n• Managing tasks and timeline\n• Budget optimization\n• Risk mitigation\n• Answering questions about your event';
+    
+    return advice;
+  };
+
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Initialize or update initial message when event changes
+  useEffect(() => {
+    // Only update if this is the first message or we're switching events
+    if (messages.length === 0 || (messages.length === 1 && messages[0].id === '1')) {
+      const initialContent = getInitialMessage();
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: initialContent,
+        timestamp: new Date(),
+      }]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPlan?.id, selectedVendors.length, tasks.length]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -109,6 +167,64 @@ const ConfigAssistant = ({ onBudgetUpdate }: ConfigAssistantProps) => {
     }
   };
 
+  const generateAdvice = (userMessage: string): string => {
+    const message = userMessage.toLowerCase();
+    
+    // Vendor-related queries
+    if (message.includes('vendor') || message.includes('venue') || message.includes('catering')) {
+      if (selectedVendors.length === 0) {
+        return 'You haven\'t selected any vendors yet. I recommend:\n\n1. Start by selecting a venue that matches your event size and location preferences\n2. Add catering services if your event includes meals\n3. Consider transportation if attendees need to be shuttled\n4. Book AV equipment if your venue doesn\'t provide it\n\nWould you like me to help you find vendors based on your event requirements?';
+      }
+      return `You have ${selectedVendors.length} vendor(s) selected. That's a good start! For a complete event, you typically need:\n\n• 1 Venue (required)\n• 1 Catering service (if serving food)\n• 1 Transport service (if needed)\n• 1 AV Equipment provider (if venue doesn't include it)\n• Activities/Entertainment (optional)\n\nWould you like to compare vendors or add more?`;
+    }
+    
+    // Task-related queries
+    if (message.includes('task') || message.includes('todo') || message.includes('what to do') || message.includes('what needs to be done')) {
+      const pendingTasks = tasks.filter(t => t.status !== 'completed');
+      if (pendingTasks.length === 0) {
+        return 'Great! All your tasks are completed. Here are some general tasks to consider:\n\n• Confirm all vendor bookings\n• Send invitations to attendees\n• Prepare event materials and badges\n• Set up registration desk\n• Coordinate with speakers/presenters\n• Arrange final walkthrough with venue\n\nWould you like me to add any of these to your task list?';
+      }
+      return `You have ${pendingTasks.length} pending task(s). Here are your high-priority items:\n\n${pendingTasks.slice(0, 5).map(t => `• ${t.title} (Due: ${t.dueDate.toLocaleDateString()})`).join('\n')}\n\nI recommend focusing on high-priority tasks first. Would you like me to help prioritize or break down any specific task?`;
+    }
+    
+    // Budget-related queries
+    if (message.includes('budget') || message.includes('cost') || message.includes('price') || message.includes('money')) {
+      if (!currentPlan) {
+        return 'I need to know your event budget to provide budget advice. What is your total budget for this event?';
+      }
+      const totalVendorCost = selectedVendors.length * 5000; // Rough estimate
+      const budgetUsed = (totalVendorCost / currentPlan.basics.budget) * 100;
+      return `Based on your selected vendors, you're approximately ${Math.round(budgetUsed)}% through your budget of $${currentPlan.basics.budget.toLocaleString()}.\n\nRecommendations:\n• Review vendor prices and compare alternatives\n• Consider package deals from vendors\n• Allocate 10-15% buffer for unexpected costs\n• Track spending in the Budget Planner\n\nWould you like me to help optimize your budget allocation?`;
+    }
+    
+    // Risk-related queries
+    if (message.includes('risk') || message.includes('problem') || message.includes('issue') || message.includes('concern')) {
+      if (!currentPlan) {
+        return 'I can help identify and mitigate risks once you have an event plan. Create an event first, then I can analyze potential risks.';
+      }
+      const risks: string[] = [];
+      if (selectedVendors.length === 0) risks.push('No vendors selected - venue booking is critical');
+      if (tasks.filter(t => t.status === 'pending' && t.priority === 'high').length > 0) {
+        risks.push('High-priority tasks are pending');
+      }
+      if (currentPlan.riskScore === 'high') {
+        risks.push('Overall risk score is high - needs attention');
+      }
+      if (risks.length === 0) {
+        return 'Your event planning looks good! I don\'t see any major risks at the moment. Keep up the good work!';
+      }
+      return `I've identified ${risks.length} risk area(s):\n\n${risks.map(r => `• ${r}`).join('\n')}\n\nWould you like me to help you create a mitigation plan for any of these?`;
+    }
+    
+    // General help
+    if (message.includes('help') || message.includes('what can you do')) {
+      return `I can help you with:\n\n📋 **Task Management**\n• Identify what needs to be done\n• Prioritize tasks\n• Track progress\n\n🏢 **Vendor Selection**\n• Recommend vendors based on your needs\n• Compare vendor options\n• Help with vendor selection\n\n💰 **Budget Planning**\n• Optimize budget allocation\n• Track spending\n• Identify cost-saving opportunities\n\n⚠️ **Risk Management**\n• Identify potential risks\n• Suggest mitigation strategies\n• Monitor risk factors\n\nAsk me anything about your event planning!`;
+    }
+    
+    // Default response
+    return `I understand you're asking about "${userMessage}". Let me help you with that.\n\nBased on your current event:\n• ${selectedVendors.length} vendor(s) selected\n• ${tasks.length} task(s) in your list\n• Event status: ${currentPlan?.status || 'draft'}\n\nCould you be more specific about what you need help with? For example:\n• "What vendors do I need?"\n• "What tasks should I prioritize?"\n• "How's my budget looking?"\n• "What are the risks?"`;
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -120,34 +236,52 @@ const ConfigAssistant = ({ onBudgetUpdate }: ConfigAssistantProps) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const userInput = input.trim();
     setInput('');
     setIsLoading(true);
 
+    // Simulate thinking delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     try {
-      const { data, error } = await supabase.functions.invoke('event-copilot-chat', {
-        body: {
-          message: input.trim(),
-          eventContext: {
-            basics: eventBasics,
-            requirements: eventRequirements,
-            specialConditions: eventSpecialConditions,
+      // Try Supabase function first, fallback to local advice
+      let response: string;
+      try {
+        const { data, error } = await supabase.functions.invoke('event-copilot-chat', {
+          body: {
+            message: userInput,
+            eventContext: {
+              plan: currentPlan,
+              selectedVendors,
+              tasks,
+              basics: eventBasics,
+              requirements: eventRequirements,
+              specialConditions: eventSpecialConditions,
+            }
           }
+        });
+
+        if (!error && data?.response) {
+          response = data.response;
+          // Handle the action if any
+          if (data.action && data.action !== 'none' && data.parameters) {
+            handleAction(data.action, data.parameters);
+          }
+        } else {
+          // Fallback to local advice generation
+          response = generateAdvice(userInput);
         }
-      });
-
-      if (error) throw error;
-
-      // Handle the action if any
-      if (data.action && data.action !== 'none' && data.parameters) {
-        handleAction(data.action, data.parameters);
+      } catch (error) {
+        // Fallback to local advice if Supabase fails
+        console.log('Using local advice generation');
+        response = generateAdvice(userInput);
       }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || 'I apologize, but I could not process your request.',
+        content: response,
         timestamp: new Date(),
-        riskUpdate: data.risk_update,
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -157,15 +291,10 @@ const ConfigAssistant = ({ onBudgetUpdate }: ConfigAssistantProps) => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'I apologize, but I encountered an error processing your request. Please try again.',
+        content: 'I apologize, but I encountered an error. Let me try a different approach...\n\n' + generateAdvice(userInput),
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
-      toast({
-        title: "Error",
-        description: "Failed to process your request",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }

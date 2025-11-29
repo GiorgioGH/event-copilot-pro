@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,8 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BarChart3, Clock, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Task } from '@/types/event';
+import { useEvent } from '@/contexts/EventContext';
+import GanttViewDialog from './GanttViewDialog';
 
-const mockTasks: Task[] = [
+// Default tasks if event has none
+const defaultTasks: Task[] = [
   { id: '1', title: 'Confirm venue booking', owner: 'Sarah M.', dueDate: new Date(Date.now() + 86400000 * 7), status: 'pending', priority: 'high' },
   { id: '2', title: 'Finalize catering menu', owner: 'John D.', dueDate: new Date(Date.now() + 86400000 * 14), status: 'in-progress', priority: 'medium' },
   { id: '3', title: 'Send invitations', owner: 'Emily R.', dueDate: new Date(Date.now() + 86400000 * 21), status: 'pending', priority: 'high' },
@@ -29,28 +33,59 @@ const priorityColors = {
 };
 
 const TasksTimeline = () => {
+  const { tasks, setTasks, currentPlan } = useEvent();
+  const [ganttOpen, setGanttOpen] = useState(false);
+  
+  // Initialize tasks if empty
+  useEffect(() => {
+    if (currentPlan && tasks.length === 0) {
+      setTasks(defaultTasks);
+    }
+  }, [currentPlan, tasks.length, setTasks]);
+
+  const displayTasks = tasks.length > 0 ? tasks : defaultTasks;
+
+  const toggleTask = (taskId: string) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId 
+        ? { ...task, status: task.status === 'completed' ? 'pending' : 'completed' }
+        : task
+    ));
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-    >
-      <Card className="h-full">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Clock className="w-5 h-5 text-accent" />
-              Tasks & Timeline
-            </CardTitle>
-            <Button variant="outline" size="sm">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Gantt View
-            </Button>
-          </div>
-        </CardHeader>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <Card className="h-full">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Clock className="w-5 h-5 text-accent" />
+                Tasks & Timeline
+                {displayTasks.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {displayTasks.filter(t => t.status === 'completed').length}/{displayTasks.length}
+                  </Badge>
+                )}
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setGanttOpen(true)}>
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Gantt View
+              </Button>
+            </div>
+          </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {mockTasks.map((task, index) => (
+            {displayTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No tasks yet. Tasks will be generated based on your event plan.
+              </p>
+            ) : (
+            displayTasks.map((task, index) => (
               <motion.div
                 key={task.id}
                 className={`flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:bg-secondary/50 transition-colors border-l-4 ${priorityColors[task.priority]}`}
@@ -60,6 +95,7 @@ const TasksTimeline = () => {
               >
                 <Checkbox 
                   checked={task.status === 'completed'}
+                  onCheckedChange={() => toggleTask(task.id)}
                   className="mt-0.5"
                 />
                 <div className="flex-1 min-w-0">
@@ -85,11 +121,13 @@ const TasksTimeline = () => {
                   {task.status.replace('-', ' ')}
                 </Badge>
               </motion.div>
-            ))}
+            )))}
           </div>
         </CardContent>
       </Card>
     </motion.div>
+    <GanttViewDialog open={ganttOpen} onOpenChange={setGanttOpen} tasks={displayTasks} />
+    </>
   );
 };
 

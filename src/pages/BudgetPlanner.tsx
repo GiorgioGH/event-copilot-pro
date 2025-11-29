@@ -153,7 +153,20 @@ const BudgetPlanner = () => {
                     <p className="text-sm text-muted-foreground">Spent so far</p>
                     <p className="text-xl font-bold text-foreground">${totalSpent.toLocaleString()}</p>
                   </div>
-                  <Button variant="accent">
+                  <Button 
+                    variant="accent" 
+                    onClick={() => {
+                      // Optimize budget: adjust allocations to match recommendations
+                      setCategories(prev => prev.map(cat => ({
+                        ...cat,
+                        allocated: cat.recommended
+                      })));
+                      toast({
+                        title: "Budget Optimized",
+                        description: "Allocations adjusted to AI recommendations for optimal budget distribution.",
+                      });
+                    }}
+                  >
                     <Sparkles className="w-4 h-4 mr-2" />
                     AI Optimize
                   </Button>

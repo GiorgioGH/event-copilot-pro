@@ -1,59 +1,15 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Store, Star, MapPin, DollarSign, ArrowRight, Check } from 'lucide-react';
+import { Store, Star, MapPin, DollarSign, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Vendor } from '@/types/event';
-
-const mockVendors: Vendor[] = [
-  {
-    id: '1',
-    name: 'Grand Conference Center',
-    type: 'venue',
-    image: '',
-    priceEstimate: 5000,
-    location: '2.3 miles away',
-    rating: 4.8,
-    fitScore: 95,
-    capacity: 200,
-    amenities: ['WiFi', 'Parking', 'Catering Kitchen'],
-    availability: true,
-  },
-  {
-    id: '2',
-    name: 'Elite Catering Co.',
-    type: 'catering',
-    image: '',
-    priceEstimate: 2500,
-    location: 'On-site available',
-    rating: 4.9,
-    fitScore: 92,
-    availability: true,
-  },
-  {
-    id: '3',
-    name: 'TechAV Solutions',
-    type: 'av-equipment',
-    image: '',
-    priceEstimate: 1200,
-    location: '5.1 miles away',
-    rating: 4.6,
-    fitScore: 88,
-    availability: true,
-  },
-  {
-    id: '4',
-    name: 'City Shuttle Services',
-    type: 'transport',
-    image: '',
-    priceEstimate: 800,
-    location: 'Citywide',
-    rating: 4.5,
-    fitScore: 85,
-    availability: true,
-  },
-];
+import { useEvent } from '@/contexts/EventContext';
+import { useToast } from '@/hooks/use-toast';
+import { loadScrapedVendors } from '@/lib/vendors';
 
 const typeLabels = {
   venue: 'Venue',
@@ -64,6 +20,44 @@ const typeLabels = {
 };
 
 const VendorRecommendations = () => {
+  const { selectedVendors, setSelectedVendors } = useEvent();
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadScrapedVendors().then(loadedVendors => {
+      // Show top 4 vendors by fit score
+      const topVendors = loadedVendors
+        .sort((a, b) => b.fitScore - a.fitScore)
+        .slice(0, 4);
+      setVendors(topVendors);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleSelectVendor = (vendorId: string) => {
+    setSelectedVendors(prev => {
+      const isSelected = prev.includes(vendorId);
+      const vendor = vendors.find(v => v.id === vendorId);
+      
+      if (isSelected) {
+        toast({
+          title: "Vendor Removed",
+          description: `${vendor?.name} removed from selection.`,
+        });
+        return prev.filter(id => id !== vendorId);
+      } else {
+        toast({
+          title: "Vendor Selected",
+          description: `${vendor?.name} added to your event.`,
+        });
+        return [...prev, vendorId];
+      }
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -77,15 +71,29 @@ const VendorRecommendations = () => {
               <Store className="w-5 h-5 text-accent" />
               Vendor Recommendations
             </CardTitle>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/vendors')}
+            >
               Compare
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-accent" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading vendors...</span>
+            </div>
+          ) : vendors.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No vendors available. Run the scraper to collect vendor data.
+            </p>
+          ) : (
           <div className="space-y-4">
-            {mockVendors.map((vendor, index) => (
+            {vendors.map((vendor, index) => (
               <motion.div
                 key={vendor.id}
                 className="p-4 rounded-xl border border-border bg-card hover:bg-secondary/30 transition-all hover:shadow-md cursor-pointer group"
@@ -131,17 +139,26 @@ const VendorRecommendations = () => {
                   </div>
                   
                   {/* Selection indicator */}
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Check className="w-4 h-4" />
-                  </Button>
+                  {selectedVendors.includes(vendor.id) ? (
+                    <Badge variant="default" className="shrink-0">
+                      <Check className="w-3 h-3 mr-1" />
+                      Selected
+                    </Badge>
+                  ) : (
+                    <Button 
+                      variant="ghost"
+                      size="icon" 
+                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleSelectVendor(vendor.id)}
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

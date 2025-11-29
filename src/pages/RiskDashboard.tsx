@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import DashboardNav from '@/components/dashboard/DashboardNav';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   AlertTriangle, 
   Clock, 
@@ -16,6 +17,43 @@ import {
   Shield,
   CheckCircle2
 } from 'lucide-react';
+
+const RiskTrendChart = () => {
+  // Generate sample risk data over time
+  const data = [
+    { date: 'Week 1', risk: 85 },
+    { date: 'Week 2', risk: 78 },
+    { date: 'Week 3', risk: 72 },
+    { date: 'Week 4', risk: 68 },
+    { date: 'Week 5', risk: 65 },
+    { date: 'Week 6', risk: 62 },
+    { date: 'Today', risk: 58 },
+  ];
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+        <YAxis stroke="hsl(var(--muted-foreground))" domain={[0, 100]} />
+        <Tooltip 
+          contentStyle={{ 
+            backgroundColor: 'hsl(var(--card))', 
+            border: '1px solid hsl(var(--border))',
+            borderRadius: '8px'
+          }} 
+        />
+        <Line 
+          type="monotone" 
+          dataKey="risk" 
+          stroke="hsl(var(--accent))" 
+          strokeWidth={2}
+          dot={{ fill: 'hsl(var(--accent))', r: 4 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
 
 const riskItems = [
   {
@@ -241,12 +279,8 @@ const RiskDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-secondary/30 rounded-lg border border-dashed border-border">
-                <div className="text-center">
-                  <TrendingUp className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-muted-foreground">Risk trend visualization</p>
-                  <p className="text-sm text-muted-foreground/70">Historical data will appear here</p>
-                </div>
+              <div className="h-64">
+                <RiskTrendChart />
               </div>
             </CardContent>
           </Card>

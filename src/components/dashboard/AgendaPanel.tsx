@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Sparkles, AlertTriangle, Coffee, Utensils, Users, Mic } from 'lucide-react';
 import { AgendaItem } from '@/types/event';
+import { useToast } from '@/hooks/use-toast';
 
 const mockAgenda: AgendaItem[] = [
   { id: '1', time: '08:30', title: 'Registration & Coffee', duration: 30, room: 'Lobby', type: 'break' },
@@ -32,6 +34,33 @@ const typeColors = {
 };
 
 const AgendaPanel = () => {
+  const [agenda, setAgenda] = useState(mockAgenda);
+  const { toast } = useToast();
+
+  const optimizeAgenda = () => {
+    // Simulate optimization: resolve conflicts and improve timing
+    const optimized = agenda.map(item => {
+      if (item.hasConflict) {
+        // Resolve conflict by adjusting time
+        const [hours, minutes] = item.time.split(':').map(Number);
+        const newTime = `${String(hours + 1).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        return { ...item, time: newTime, hasConflict: false };
+      }
+      return item;
+    }).sort((a, b) => {
+      // Sort by time
+      const [aHours, aMins] = a.time.split(':').map(Number);
+      const [bHours, bMins] = b.time.split(':').map(Number);
+      return aHours * 60 + aMins - (bHours * 60 + bMins);
+    });
+    
+    setAgenda(optimized);
+    toast({
+      title: "Agenda Optimized",
+      description: "Conflicts resolved and schedule optimized for better flow.",
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -45,7 +74,7 @@ const AgendaPanel = () => {
               <Calendar className="w-5 h-5 text-accent" />
               Agenda
             </CardTitle>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={optimizeAgenda}>
               <Sparkles className="w-4 h-4 mr-2" />
               Optimize
             </Button>
@@ -53,7 +82,7 @@ const AgendaPanel = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {mockAgenda.map((item, index) => {
+            {agenda.map((item, index) => {
               const Icon = typeIcons[item.type];
               return (
                 <motion.div

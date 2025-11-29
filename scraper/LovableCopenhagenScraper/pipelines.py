@@ -6,6 +6,7 @@
 import re
 import json
 import os
+import shutil
 import logging
 from itemadapter import ItemAdapter
 from typing import Dict, Any, Optional, List
@@ -253,6 +254,22 @@ class StoragePipeline:
                 # Write to JSON file with pretty formatting
                 with open(self.json_file_path, 'w', encoding='utf-8') as f:
                     json.dump(unique_items, f, indent=2, ensure_ascii=False)
+                
+                # Also copy to public directory for React app (if it exists)
+                # Get project root (3 levels up from pipelines.py: pipelines.py -> LovableCopenhagenScraper -> scraper -> root)
+                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                public_vendors_path = os.path.join(project_root, 'public', 'vendors.json')
+                
+                try:
+                    # Create public directory if it doesn't exist
+                    public_dir = os.path.dirname(public_vendors_path)
+                    os.makedirs(public_dir, exist_ok=True)
+                    
+                    # Copy the file
+                    shutil.copy2(self.json_file_path, public_vendors_path)
+                    logger.info(f"Also copied vendors.json to {public_vendors_path} for React app")
+                except Exception as e:
+                    logger.warning(f"Could not copy vendors.json to public directory: {e}")
                 
                 # Count by vendor type for logging
                 vendor_counts = {}

@@ -1,13 +1,18 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useEvent } from '@/contexts/EventContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar, Users, MapPin, DollarSign, AlertTriangle, CheckCircle, Clock, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 
 const EventSummaryCard = () => {
   const { currentPlan } = useEvent();
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (!currentPlan) return null;
 
@@ -104,12 +109,83 @@ const EventSummaryCard = () => {
             </div>
           </div>
 
-          <Button className="w-full" variant="default">
+          <Button 
+            className="w-full" 
+            variant="default"
+            onClick={() => setPlanDialogOpen(true)}
+          >
             <Eye className="w-4 h-4" />
             View Full Plan
           </Button>
         </CardContent>
       </Card>
+      
+      <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{currentPlan.basics.name || 'Event Plan'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            <div>
+              <h3 className="font-semibold mb-2">Event Basics</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Type: </span>
+                  <span className="capitalize">{currentPlan.basics.type?.replace('-', ' ')}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Participants: </span>
+                  <span>{currentPlan.basics.participants}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Date: </span>
+                  <span>
+                    {currentPlan.basics.dateRange?.start 
+                      ? format(new Date(currentPlan.basics.dateRange.start), 'MMM d, yyyy')
+                      : 'TBD'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Location: </span>
+                  <span>{currentPlan.basics.location || 'TBD'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Budget: </span>
+                  <span>${currentPlan.basics.budget?.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Estimated Cost: </span>
+                  <span>${currentPlan.estimatedCost.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Requirements</h3>
+              <div className="text-sm space-y-1">
+                <div>Lunch: {currentPlan.requirements.includeLunch ? 'Yes' : 'No'}</div>
+                <div>Accessibility: {currentPlan.requirements.accessibilityNeeded ? 'Required' : 'Not Required'}</div>
+                <div>Timeframe: {currentPlan.requirements.preferredTimeframe}</div>
+                <div>Venue: {currentPlan.requirements.venuePreference}</div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-2">Status</h3>
+              <Badge className="capitalize">{currentPlan.status}</Badge>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                Go to Dashboard
+              </Button>
+              <Button onClick={() => setPlanDialogOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };

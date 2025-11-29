@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Bell, Settings, LogOut, Plus, User } from 'lucide-react';
+import EventSelector from '@/components/dashboard/EventSelector';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -30,6 +31,8 @@ const Header = () => {
         </button>
 
         <div className="flex items-center gap-3">
+          <EventSelector />
+          
           <Button variant="accent" size="sm" onClick={() => navigate('/onboarding')}>
             <Plus className="w-4 h-4" />
             New Event
