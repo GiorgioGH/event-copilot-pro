@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import DashboardNav from '@/components/dashboard/DashboardNav';
 import { useEvent } from '@/contexts/EventContext';
+import ConfigAssistant from '@/components/chat/ConfigAssistant';
+import { useToast } from '@/hooks/use-toast';
 import { 
   DollarSign, 
   Building, 
@@ -46,6 +48,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const BudgetPlanner = () => {
   const { currentPlan } = useEvent();
+  const { toast } = useToast();
   const [categories, setCategories] = useState(initialCategories);
   
   const totalBudget = currentPlan?.basics.budget || 12000;
@@ -63,6 +66,35 @@ const BudgetPlanner = () => {
       )
     );
   };
+
+  const handleBudgetUpdate = useCallback((category: string, amount: number, operation: 'increase' | 'decrease' | 'set') => {
+    setCategories(prev => 
+      prev.map(cat => {
+        if (cat.id === category || cat.name.toLowerCase() === category.toLowerCase()) {
+          let newValue: number;
+          switch (operation) {
+            case 'increase':
+              newValue = cat.allocated + amount;
+              break;
+            case 'decrease':
+              newValue = Math.max(0, cat.allocated - amount);
+              break;
+            case 'set':
+              newValue = amount;
+              break;
+            default:
+              newValue = cat.allocated;
+          }
+          return { ...cat, allocated: newValue };
+        }
+        return cat;
+      })
+    );
+    toast({
+      title: "Budget Updated",
+      description: `${category} budget ${operation === 'increase' ? 'increased' : operation === 'decrease' ? 'decreased' : 'set'} by $${amount.toLocaleString()}`,
+    });
+  }, [toast]);
 
   return (
     <>
@@ -232,6 +264,8 @@ const BudgetPlanner = () => {
           })}
         </div>
       </main>
+      
+      <ConfigAssistant onBudgetUpdate={handleBudgetUpdate} />
     </>
   );
 };
