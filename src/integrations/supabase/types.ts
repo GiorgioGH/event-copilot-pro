@@ -14,7 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          brand_vibe: string[] | null
+          created_at: string
+          employee_count: number | null
+          headquarters_location: string | null
+          id: string
+          industry: string | null
+          name: string
+          standard_event_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_vibe?: string[] | null
+          created_at?: string
+          employee_count?: number | null
+          headquarters_location?: string | null
+          id?: string
+          industry?: string | null
+          name: string
+          standard_event_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_vibe?: string[] | null
+          created_at?: string
+          employee_count?: number | null
+          headquarters_location?: string | null
+          id?: string
+          industry?: string | null
+          name?: string
+          standard_event_time?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
