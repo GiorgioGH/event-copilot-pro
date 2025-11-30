@@ -14,7 +14,7 @@ interface EventContextType {
   currentEventId: string | null;
   setCurrentEventId: (id: string | null) => void;
   events: Map<string, EventData>;
-  createEvent: (plan: EventPlan) => string;
+  createEvent: (plan: EventPlan, initialVendors?: string[]) => string;
   deleteEvent: (id: string) => void;
   
   // Current event data (convenience getters)
@@ -151,12 +151,12 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const tasks = currentEvent?.tasks || [];
   const invitedPeople = currentEvent?.invitedPeople || [];
 
-  // Create new event
-  const createEvent = (plan: EventPlan): string => {
+  // Create new event with optional initial vendors
+  const createEvent = (plan: EventPlan, initialVendors?: string[]): string => {
     const id = plan.id || `event-${Date.now()}`;
     const newEvent: EventData = {
       plan,
-      selectedVendors: [],
+      selectedVendors: initialVendors || [],
       tasks: [],
       invitedPeople: [],
     };

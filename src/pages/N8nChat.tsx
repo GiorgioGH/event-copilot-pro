@@ -35,7 +35,7 @@ interface Message {
 
 const N8nChat = () => {
   const navigate = useNavigate();
-  const { createEvent, setSelectedVendors } = useEvent();
+  const { createEvent } = useEvent();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -219,38 +219,48 @@ Tell me about the event you want to create - the type, date, number of participa
           updatedAt: new Date(),
         };
 
-        // Create the event
-        createEvent(newPlan);
-
-        // Load vendors and select the preferred ones
+        // Load vendors first to match preferred vendors
         const preferredVendorNames = eventData.specialConditions?.preferredVendors || [];
+        let matchedVendorIds: string[] = [];
+        
         if (preferredVendorNames.length > 0) {
           try {
             const allVendors = await loadScrapedVendors();
-            const matchedVendorIds: string[] = [];
+            console.log(`Loaded ${allVendors.length} vendors, looking for:`, preferredVendorNames);
             
             for (const preferredName of preferredVendorNames) {
-              // Find vendor by name (case-insensitive partial match)
-              const matchedVendor = allVendors.find(v => 
-                v.name.toLowerCase().includes(preferredName.toLowerCase()) ||
-                preferredName.toLowerCase().includes(v.name.toLowerCase())
-              );
+              // Find vendor by name (case-insensitive partial match, also check words)
+              const searchTerms = preferredName.toLowerCase().split(/\s+/);
+              
+              const matchedVendor = allVendors.find(v => {
+                const vendorNameLower = v.name.toLowerCase();
+                // Direct partial match
+                if (vendorNameLower.includes(preferredName.toLowerCase())) return true;
+                if (preferredName.toLowerCase().includes(vendorNameLower)) return true;
+                // Check if any word matches
+                return searchTerms.some(term => 
+                  term.length > 2 && vendorNameLower.includes(term)
+                );
+              });
+              
               if (matchedVendor) {
                 matchedVendorIds.push(matchedVendor.id);
-                console.log(`Matched vendor: "${preferredName}" -> "${matchedVendor.name}" (${matchedVendor.id})`);
+                console.log(`✅ Matched vendor: "${preferredName}" -> "${matchedVendor.name}" (${matchedVendor.id})`);
               } else {
-                console.log(`No match found for vendor: "${preferredName}"`);
+                console.log(`❌ No match found for vendor: "${preferredName}"`);
+                // List some available vendors for debugging
+                const sampleVendors = allVendors.slice(0, 5).map(v => v.name);
+                console.log(`   Available vendors include: ${sampleVendors.join(', ')}...`);
               }
-            }
-            
-            if (matchedVendorIds.length > 0) {
-              setSelectedVendors(matchedVendorIds);
-              console.log("Selected vendors:", matchedVendorIds);
             }
           } catch (error) {
             console.error("Error loading vendors:", error);
           }
         }
+
+        // Create the event with matched vendors
+        createEvent(newPlan, matchedVendorIds);
+        console.log("Event created with vendors:", matchedVendorIds);
 
         toast({
           title: "🎉 Event Created!",
