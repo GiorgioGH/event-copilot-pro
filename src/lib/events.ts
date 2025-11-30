@@ -4,9 +4,27 @@ import { EventPlan, CopilotEvent } from '@/types/event';
  * Convert EventPlan to CopilotEvent format (for events.json)
  */
 export function eventPlanToCopilotEvent(plan: EventPlan): CopilotEvent {
-  // Safely access dateRange with null checks
-  const dateRange = plan.basics?.dateRange;
-  const startDate = dateRange?.start;
+  // Extra safety - return default if plan is invalid
+  if (!plan || typeof plan !== 'object') {
+    return {
+      id: `event-${Date.now()}`,
+      title: 'Untitled Event',
+      type: 'workshop',
+      date: new Date().toISOString().split('T')[0],
+      time: '10:00',
+      description: 'Event details',
+      location: 'TBD',
+      budgetTotal: 0,
+      budgetUsed: 0,
+      attendees: [],
+      status: 'future',
+    };
+  }
+  
+  // Safely access nested properties
+  const basics = plan.basics || {};
+  const dateRange = basics.dateRange || {};
+  const startDate = dateRange.start;
   
   // Handle date conversion safely
   let dateStr: string;
@@ -35,23 +53,23 @@ export function eventPlanToCopilotEvent(plan: EventPlan): CopilotEvent {
 
   // Valid event types - map to valid ones
   const validEventTypes = ['team-building', 'seminar', 'workshop', 'offsite', 'networking', 'company-dinner'];
-  const eventType = plan.basics?.type && validEventTypes.includes(plan.basics.type) 
-    ? plan.basics.type 
+  const eventType = basics.type && validEventTypes.includes(basics.type) 
+    ? basics.type 
     : 'workshop';
 
   return {
     id: plan.id || `event-${Date.now()}`,
-    title: plan.basics?.name || 'Untitled Event',
+    title: basics.name || 'Untitled Event',
     type: eventType,
     date: dateStr,
-    time: '10:00', // Default time, could be extracted from plan if available
-    description: plan.basics?.participants 
-      ? `Event for ${plan.basics.participants} participants`
+    time: '10:00',
+    description: basics.participants 
+      ? `Event for ${basics.participants} participants`
       : 'Event details',
-    location: plan.basics?.location || 'TBD',
-    budgetTotal: plan.basics?.budget || 0,
+    location: basics.location || 'TBD',
+    budgetTotal: basics.budget || 0,
     budgetUsed: plan.estimatedCost || 0,
-    attendees: [], // Could be populated from invited people
+    attendees: [],
     status,
   };
 }
