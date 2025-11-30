@@ -1,0 +1,171 @@
+[
+  {
+    "id": "EVT_CONCEPT_04_SUMMER",
+    "basics": {
+      "name": "Captain's Table: GoBoat & Seaside",
+      "type": "team-building",
+      "dateRange": {
+        "start": "2025-08-22T14:45:00.000Z",
+        "end": "2025-08-22T19:30:00.000Z"
+      },
+      "participants": 48,
+      "budget": 75000,
+      "location": "Nordhavn & Toldboden"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": false,
+      "timelineFlexibility": 15,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "outdoor"
+    },
+    "specialConditions": {
+      "speakerNames": [],
+      "dietaryRestrictions": [
+        "Standard",
+        "Vegetarian options required for 7 kitchens"
+      ],
+      "equipment": [
+        "Life jackets",
+        "Bluetooth speakers for boats"
+      ],
+      "preferredVendors": [
+        "GoBoat",
+        "Seaside Toldboden"
+      ]
+    },
+    "riskScore": "medium",
+    "estimatedCost": 72000,
+    "status": "planning",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T10:00:00.000Z"
+  },
+  {
+    "id": "EVT_CONCEPT_01_AUTUMN",
+    "basics": {
+      "name": "The Citadel Mystery & Skyline Dining",
+      "type": "company-dinner",
+      "dateRange": {
+        "start": "2025-09-12T15:00:00.000Z",
+        "end": "2025-09-12T21:00:00.000Z"
+      },
+      "participants": 40,
+      "budget": 85000,
+      "location": "Kastellet & Restaurant Silo"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 30,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "either"
+    },
+    "specialConditions": {
+      "speakerNames": [],
+      "dietaryRestrictions": [
+        "Gourmet 3-course specific dietary handling"
+      ],
+      "equipment": [
+        "Mystery Hunt Game Kits"
+      ],
+      "preferredVendors": [
+        "Mystery Makers",
+        "Restaurant Silo",
+        "Taxa/Transport Service"
+      ]
+    },
+    "riskScore": "low",
+    "estimatedCost": 82500,
+    "status": "confirmed",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T10:00:00.000Z"
+  },
+  {
+    "id": "EVT_CONCEPT_02_ACTIVE",
+    "basics": {
+      "name": "Nordhavn Padel Tournament",
+      "type": "team-building",
+      "dateRange": {
+        "start": "2025-10-03T14:30:00.000Z",
+        "end": "2025-10-03T20:30:00.000Z"
+      },
+      "participants": 32,
+      "budget": 45000,
+      "location": "Nordhavn (Racket Club & Pier 3)"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 0,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "indoor"
+    },
+    "specialConditions": {
+      "speakerNames": [],
+      "dietaryRestrictions": [
+        "Tapas / Mediterranean styles"
+      ],
+      "equipment": [
+        "Padel Rackets",
+        "Balls",
+        "Trophies",
+        "Towels"
+      ],
+      "preferredVendors": [
+        "Racket Club Nordhavn",
+        "Pier 3"
+      ]
+    },
+    "riskScore": "low",
+    "estimatedCost": 38000,
+    "status": "planning",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T10:00:00.000Z"
+  },
+  {
+    "id": "EVT_CONCEPT_03_INDOOR",
+    "basics": {
+      "name": "The Barracuda Gin Lab",
+      "type": "networking",
+      "dateRange": {
+        "start": "2025-11-07T16:00:00.000Z",
+        "end": "2025-11-07T20:00:00.000Z"
+      },
+      "participants": 50,
+      "budget": 40000,
+      "location": "Accura Domicile (In-House)"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 60,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "indoor"
+    },
+    "specialConditions": {
+      "speakerNames": [
+        "Guest Mixologist (Curfew or similar)",
+        "Senior Partners (Judges)"
+      ],
+      "dietaryRestrictions": [
+        "Alcohol-free cocktail options",
+        "Buffet dietary labels"
+      ],
+      "equipment": [
+        "Cocktail Shakers",
+        "Ice machines",
+        "Glassware",
+        "Sound system"
+      ],
+      "preferredVendors": [
+        "A la Cura (Internal Kitchen)",
+        "Curfew (Consultancy)"
+      ]
+    },
+    "riskScore": "low",
+    "estimatedCost": 32000,
+    "status": "draft",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T10:00:00.000Z"
+  }
+]

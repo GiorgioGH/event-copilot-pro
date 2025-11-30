@@ -1,0 +1,53 @@
+{
+    "current_date": "2025-11-30",
+    "current_day_of_week": "Sunday",
+    "week_number": 49,
+    "month": "November",
+    "year": 2025,
+    "season": "Winter",
+    "public_holidays": [
+      {"country": "Denmark", "date": "2025-12-25", "name": "Christmas Day"},
+      {"country": "Denmark", "date": "2025-12-26", "name": "Second Day of Christmas"}
+    ],
+    "common_working_hours": {
+      "weekdays": {"start": "09:00", "end": "17:00"},
+      "weekends": {"start": "10:00", "end": "14:00"}
+    },
+    "typical_meal_times": {
+      "breakfast": "07:00-09:00",
+      "lunch": "12:00-14:00",
+      "dinner": "18:00-21:00"
+    },
+    "general_event_planning_guidelines": {
+      "average_event_duration": "2-4 hours",
+      "recommended_team_size_for_planning": "3-6 people",
+      "common_budget_ranges": {
+        "small": "€500-€1500",
+        "medium": "€1500-€5000",
+        "large": "€5000+"
+      },
+      "outdoor_event_considerations": [
+        "Have a weather backup plan",
+        "Consider heating or shade depending on season",
+        "Ensure accessibility and safety"
+      ],
+      "venue_booking_lead_time": "1-4 weeks depending on popularity",
+      "food_catering_guidelines": [
+        "Provide vegetarian and vegan options",
+        "Include allergy information",
+        "Plan 1.5 servings per person"
+      ],
+      "common_activity_types": [
+        "Team-building workshops",
+        "Outdoor adventures",
+        "Casual networking dinners",
+        "Sporting events",
+        "Creative workshops"
+      ]
+    },
+    "travel_and_logistics": {
+      "average_commute_time_in_copenhagen": "20-40 minutes",
+      "public_transport_tips": "Use Metro and buses for central locations; allow extra 10-15 mins for peak hours"
+    }
+  }
+  

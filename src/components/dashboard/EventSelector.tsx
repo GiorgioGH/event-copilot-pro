@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ChevronDown, Plus, Trash2, Check } from 'lucide-react';
+import { Calendar, ChevronDown, Plus, Trash2, Check, MessageCircle, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -111,12 +111,28 @@ const EventSelector = () => {
         )}
         
         <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+          Create New Event
+        </DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => navigate('/n8n-chat')}
+          className="cursor-pointer py-2"
+        >
+          <MessageCircle className="w-4 h-4 mr-2 text-emerald-500" />
+          <div>
+            <div className="text-sm">Chat with AI</div>
+            <div className="text-xs text-muted-foreground">Let AI help you plan</div>
+          </div>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => navigate('/onboarding')}
-          className="cursor-pointer"
+          className="cursor-pointer py-2"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Event
+          <ClipboardList className="w-4 h-4 mr-2 text-blue-500" />
+          <div>
+            <div className="text-sm">Manual Setup</div>
+            <div className="text-xs text-muted-foreground">Fill in details yourself</div>
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

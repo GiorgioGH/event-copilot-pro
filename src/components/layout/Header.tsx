@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Bell, Settings, LogOut, Plus, User } from 'lucide-react';
+import { Bell, Settings, LogOut, Plus, User, MessageCircle, ClipboardList } from 'lucide-react';
 import EventSelector from '@/components/dashboard/EventSelector';
 
 const Header = () => {
@@ -33,10 +33,37 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <EventSelector />
           
-          <Button variant="accent" size="sm" onClick={() => navigate('/onboarding')}>
-            <Plus className="w-4 h-4" />
-            New Event
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="accent" size="sm">
+                <Plus className="w-4 h-4" />
+                New Event
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem 
+                onClick={() => navigate('/n8n-chat')}
+                className="cursor-pointer py-3"
+              >
+                <MessageCircle className="w-4 h-4 mr-3 text-emerald-500" />
+                <div>
+                  <div className="font-medium">Chat with AI</div>
+                  <div className="text-xs text-muted-foreground">Let AI help you plan</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => navigate('/onboarding')}
+                className="cursor-pointer py-3"
+              >
+                <ClipboardList className="w-4 h-4 mr-3 text-blue-500" />
+                <div>
+                  <div className="font-medium">Manual Setup</div>
+                  <div className="text-xs text-muted-foreground">Fill in the details yourself</div>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />

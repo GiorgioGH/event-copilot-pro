@@ -1,0 +1,93 @@
+{
+  "EventPlan": {
+    "id": "string",
+    "basics": {
+      "name": "string",
+      "type": "team-building | seminar | workshop | offsite | networking | company-dinner",
+      "dateRange": {
+        "start": "Date | null",
+        "end": "Date | null"
+      },
+      "participants": "number",
+      "budget": "number",
+      "location": "string"
+    },
+    "requirements": {
+      "includeLunch": "boolean",
+      "accessibilityNeeded": "boolean",
+      "timelineFlexibility": "number (0-100)",
+      "preferredTimeframe": "morning | afternoon | full-day",
+      "venuePreference": "indoor | outdoor | either"
+    },
+    "specialConditions": {
+      "speakerNames": ["string"],
+      "dietaryRestrictions": ["string"],
+      "equipment": ["string"],
+      "preferredVendors": ["string"]
+    },
+    "riskScore": "low | medium | high",
+    "estimatedCost": "number",
+    "status": "draft | planning | confirmed | in-progress | completed",
+    "createdAt": "Date",
+    "updatedAt": "Date"
+  },
+  "CopilotEvent": {
+    "id": "string",
+    "title": "string",
+    "type": "string",
+    "date": "string",
+    "time": "string (optional)",
+    "description": "string (optional)",
+    "location": "string (optional)",
+    "budgetTotal": "number (optional)",
+    "budgetUsed": "number (optional)",
+    "attendees": ["string (optional)"],
+    "status": "future | past"
+  },
+  "exampleEventPlan": {
+    "id": "evt-001",
+    "basics": {
+      "name": "Annual Team Building 2025",
+      "type": "team-building",
+      "dateRange": {
+        "start": "2025-03-15T09:00:00.000Z",
+        "end": "2025-03-15T17:00:00.000Z"
+      },
+      "participants": 50,
+      "budget": 75000,
+      "location": "Copenhagen"
+    },
+    "requirements": {
+      "includeLunch": true,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 60,
+      "preferredTimeframe": "full-day",
+      "venuePreference": "indoor"
+    },
+    "specialConditions": {
+      "speakerNames": ["Jane Doe", "John Smith"],
+      "dietaryRestrictions": ["vegetarian", "gluten-free"],
+      "equipment": ["projector", "microphone", "whiteboard"],
+      "preferredVendors": ["Catering Co", "AV Solutions"]
+    },
+    "riskScore": "medium",
+    "estimatedCost": 68500,
+    "status": "planning",
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-20T14:45:00.000Z"
+  },
+  "exampleCopilotEvent": {
+    "id": "cpe-001",
+    "title": "Q1 Strategy Workshop",
+    "type": "workshop",
+    "date": "2025-02-20",
+    "time": "10:00",
+    "description": "Quarterly planning session for department heads",
+    "location": "Conference Center A",
+    "budgetTotal": 25000,
+    "budgetUsed": 18500,
+    "attendees": ["alice@company.com", "bob@company.com", "carol@company.com"],
+    "status": "future"
+  }
+}
+

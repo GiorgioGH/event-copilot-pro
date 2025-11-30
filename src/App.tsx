@@ -21,6 +21,7 @@ import Team from "./pages/Team";
 import DayOf from "./pages/DayOf";
 import Communication from "./pages/Communication";
 import Settings from "./pages/Settings";
+import N8nChat from "./pages/N8nChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                   <Route path="/day-of" element={<DayOf />} />
                   <Route path="/communication" element={<Communication />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/n8n-chat" element={<N8nChat />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

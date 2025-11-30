@@ -1,0 +1,68 @@
+{
+    "company_profile": {
+      "id": "ACCURA_DK_VERIFIED",
+      "name": "Accura Advokatpartnerselskab",
+      "website": "https://accura.dk",
+      "industry": "Legal Services (Commercial Law / M&A Focus)",
+      "founded_year": 1999,
+      "headquarters": {
+        "address": "Alexandriagade 8, 2150 Nordhavn, Denmark",
+        "features": [
+          "New domicile (opened April 2023)",
+          "Waterfront location next to Orientkaj Metro",
+          "DGNB Gold certified (Sustainable Building)",
+          "On-site auditorium",
+          "Private underground parking"
+        ]
+      }
+    },
+    "demographics": {
+      "total_headcount": "550+ (as of late 2023)",
+      "growth_trend": "Rapid expansion (grew from ~350 to ~560 employees between 2020-2023)",
+      "structure": "Flat and informal structure with dynamic sub-teams",
+      "key_roles": [
+        "Partners & Attorneys",
+        "Commercial/Business Support",
+        "Trainees/Students"
+      ]
+    },
+    "cultural_DNA": {
+      "self_described_vibe": "Ambitious, commercial, solution-oriented",
+      "core_values": [
+        "Create results together",
+        "Focus on professional and personal development",
+        "One Firm (strong unity focus)"
+      ],
+      "diversity_focus": "Strategic objective to have DE&I at all levels; established a Diversity Council",
+      "art_focus": "Office houses a versatile art collection designed to interact with the architecture"
+    },
+    "logistics_and_facilities": {
+      "catering_on_site": {
+        "venue": "'A la Cura' (Staff Restaurant)",
+        "focus": "Ecology, fresh products, meals cooked from scratch"
+      },
+      "transport": {
+        "metro": "Orientkaj Station (M4) is directly opposite the entrance",
+        "cycling": "Dedicated bicycle parking in underground facility",
+        "parking": "Private underground car park with guest spots"
+      }
+    },
+    "verified_event_traditions": {
+      "bi_annual_trip": "Company-wide trip abroad every 2 years (verified destinations: Marbella, Greece, Italy)",
+      "weekly_social": "Friday bar in their own on-site bar 'Barracuda'",
+      "sports": "Active football team (winners of the Danish attorney football tournament)",
+      "annual_parties": [
+        "Summer Party",
+        "Christmas Party",
+        "New Year's Party"
+      ],
+      "other_socials": [
+        "Social team events",
+        "Events specifically for attorneys/assistant attorneys"
+      ]
+    },
+    "upcoming_context": {
+      "recent_milestone": "Relocation to new Nordhavn headquarters (Trælastholmen)",
+      "strategic_focus": "Retaining talent during rapid growth; integrating new hires"
+    }
+  }
