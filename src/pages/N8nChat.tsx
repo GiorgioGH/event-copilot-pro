@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import DashboardNav from '@/components/dashboard/DashboardNav';
 import { useEvent } from '@/contexts/EventContext';
 import { EventPlan } from '@/types/event';
+import { loadScrapedVendors } from '@/lib/vendors';
 
 // n8n webhook URL
 const N8N_WEBHOOK_URL = "https://clemens07.app.n8n.cloud/webhook/app";
@@ -34,7 +35,7 @@ interface Message {
 
 const N8nChat = () => {
   const navigate = useNavigate();
-  const { createEvent } = useEvent();
+  const { createEvent, setSelectedVendors } = useEvent();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -102,41 +103,89 @@ Tell me about the event you want to create - the type, date, number of participa
         throw new Error(`Webhook error: ${response.status}`);
       }
 
-      const data = await response.json();
+      let rawData = await response.json();
       
-      // Handle different response formats from n8n
-      let aiResponse = "";
-      if (typeof data === "string") {
-        aiResponse = data;
-      } else if (data.response) {
-        aiResponse = data.response;
-      } else if (data.output) {
-        aiResponse = data.output;
-      } else if (data.message) {
-        aiResponse = data.message;
-      } else if (data.text) {
-        aiResponse = data.text;
-      } else if (data.result) {
-        aiResponse = data.result;
+      // Handle n8n array responses (sometimes n8n wraps in array)
+      if (Array.isArray(rawData)) {
+        rawData = rawData[0];
+      }
+
+      console.log("Raw n8n response:", rawData, "Type:", typeof rawData);
+
+      // Try to get a clean parsed object
+      let parsedData: any = null;
+      
+      // Function to try parsing a string as JSON
+      const tryParseJSON = (str: string): any => {
+        try {
+          return JSON.parse(str);
+        } catch {
+          return null;
+        }
+      };
+      
+      // Extract the actual content - n8n wraps responses in {output: "..."} 
+      let contentStr = "";
+      if (typeof rawData === "string") {
+        contentStr = rawData;
+      } else if (typeof rawData === "object" && rawData !== null) {
+        // n8n wraps the response in output property
+        contentStr = rawData.output || rawData.response || rawData.text || rawData.result || rawData.message || "";
+      }
+
+      console.log("Content string:", contentStr);
+
+      // Try to parse the content as JSON
+      if (typeof contentStr === "string" && contentStr.trim()) {
+        parsedData = tryParseJSON(contentStr);
+        if (!parsedData) {
+          // It's just a plain text message
+          parsedData = { message: contentStr };
+        }
+      } else if (typeof rawData === "object") {
+        parsedData = rawData;
       } else {
-        aiResponse = JSON.stringify(data, null, 2);
+        parsedData = { message: String(rawData) };
+      }
+
+      console.log("Parsed data:", parsedData);
+
+      // Check if this is a finalized event
+      const isDone = parsedData?.done === true;
+      const eventData = parsedData?.event;
+      
+      console.log("isDone:", isDone, "hasEvent:", !!eventData);
+
+      // Extract the message to display
+      let aiResponse = "";
+      if (parsedData?.message) {
+        aiResponse = parsedData.message;
+      } else if (parsedData?.response) {
+        aiResponse = parsedData.response;
+      } else if (parsedData?.output) {
+        aiResponse = parsedData.output;
+      } else if (parsedData?.text) {
+        aiResponse = parsedData.text;
+      } else if (typeof rawData === "string") {
+        aiResponse = rawData;
+      } else {
+        aiResponse = "I received your message. How can I help you further?";
       }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: aiResponse || "Response received but was empty.",
+        content: aiResponse,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Check if the agent has finished creating the event
-      if (data.done === true && data.event) {
+      // Create the event if done
+      if (isDone && eventData) {
         setEventCreated(true);
         
         // Build the EventPlan from the response
-        const eventData = data.event;
         const newPlan: EventPlan = {
           id: `event-${Date.now()}`,
           basics: {
@@ -172,6 +221,36 @@ Tell me about the event you want to create - the type, date, number of participa
 
         // Create the event
         createEvent(newPlan);
+
+        // Load vendors and select the preferred ones
+        const preferredVendorNames = eventData.specialConditions?.preferredVendors || [];
+        if (preferredVendorNames.length > 0) {
+          try {
+            const allVendors = await loadScrapedVendors();
+            const matchedVendorIds: string[] = [];
+            
+            for (const preferredName of preferredVendorNames) {
+              // Find vendor by name (case-insensitive partial match)
+              const matchedVendor = allVendors.find(v => 
+                v.name.toLowerCase().includes(preferredName.toLowerCase()) ||
+                preferredName.toLowerCase().includes(v.name.toLowerCase())
+              );
+              if (matchedVendor) {
+                matchedVendorIds.push(matchedVendor.id);
+                console.log(`Matched vendor: "${preferredName}" -> "${matchedVendor.name}" (${matchedVendor.id})`);
+              } else {
+                console.log(`No match found for vendor: "${preferredName}"`);
+              }
+            }
+            
+            if (matchedVendorIds.length > 0) {
+              setSelectedVendors(matchedVendorIds);
+              console.log("Selected vendors:", matchedVendorIds);
+            }
+          } catch (error) {
+            console.error("Error loading vendors:", error);
+          }
+        }
 
         toast({
           title: "🎉 Event Created!",

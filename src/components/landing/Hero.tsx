@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Calendar, Users, Shield, BarChart3 } from 'lucide-react';
+import { ArrowRight, Calendar, Users, Shield, BarChart3, MessageCircle, ClipboardList, LayoutDashboard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
@@ -69,28 +69,62 @@ const Hero = () => {
             risk mitigation, and real-time analytics.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* Start Planning Options */}
           <motion.div 
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
+            className="mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
           >
+            <p className="text-primary-foreground/60 text-sm mb-6">Choose how you want to plan your event</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button 
+                  variant="hero" 
+                  size="xl" 
+                  onClick={() => navigate('/n8n-chat')}
+                  className="group w-full sm:w-auto gap-3"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Plan with AI
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button 
+                  variant="hero-outline" 
+                  size="xl"
+                  onClick={() => navigate('/onboarding')}
+                  className="group w-full sm:w-auto gap-3"
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  Use Form
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Dashboard Button */}
+          <motion.div
+            className="mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+          >
             <Button 
-              variant="hero" 
-              size="xl" 
-              onClick={() => navigate('/onboarding')}
-              className="group"
+              variant="ghost" 
+              size="lg"
+              onClick={() => navigate('/dashboard')}
+              className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 gap-2"
             >
-              Start Planning
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </Button>
-            <Button 
-              variant="hero-outline" 
-              size="xl"
-              onClick={() => navigate('/login')}
-            >
-              Login
+              <LayoutDashboard className="w-4 h-4" />
+              Go to Dashboard
             </Button>
           </motion.div>
 
@@ -118,44 +152,6 @@ const Hero = () => {
           </motion.div>
         </motion.div>
 
-        {/* Floating dashboard preview */}
-        <motion.div
-          className="mt-20 relative max-w-5xl mx-auto"
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 1, ease: 'easeOut' }}
-        >
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-primary-foreground/10">
-            <div className="bg-card p-1">
-              {/* Browser chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                  <div className="w-3 h-3 rounded-full bg-warning/60" />
-                  <div className="w-3 h-3 rounded-full bg-success/60" />
-                </div>
-                <div className="flex-1 ml-4">
-                  <div className="bg-secondary rounded-md px-3 py-1.5 text-xs text-muted-foreground max-w-xs mx-auto">
-                    app.smeeventcopilot.com/dashboard
-                  </div>
-                </div>
-              </div>
-              
-              {/* Preview content */}
-              <div className="aspect-[16/9] bg-gradient-to-br from-secondary to-background flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-8 h-8 text-accent" />
-                  </div>
-                  <p className="text-muted-foreground">Dashboard Preview</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Glow effect */}
-          <div className="absolute -inset-4 bg-accent/20 rounded-3xl blur-3xl -z-10 opacity-50" />
-        </motion.div>
       </div>
     </section>
   );
