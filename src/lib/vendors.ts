@@ -1,4 +1,5 @@
 import { Vendor } from '@/types/event';
+import { usdToDkk } from '@/lib/utils/currency';
 
 // Scraped vendor data structure (from vendors.json)
 interface ScrapedVendor {
@@ -16,6 +17,9 @@ interface ScrapedVendor {
   amenities?: string[];
   images?: string[];
   url_source: string;
+  website?: string;
+  phone?: string;
+  email?: string;
   // Venue specific
   in_house_av?: boolean | null;
   parking_available?: boolean | null;
@@ -34,7 +38,7 @@ interface ScrapedVendor {
 
 /**
  * Extract numeric price from price string
- * Handles DKK, EUR, USD and converts to USD (or keeps DKK if preferred)
+ * Returns price in DKK
  */
 function extractPrice(priceStr: string | null | undefined): number {
   if (!priceStr) return 0;
@@ -44,16 +48,20 @@ function extractPrice(priceStr: string | null | undefined): number {
   if (match) {
     const number = parseFloat(match[1].replace(',', '.'));
     
-    // Check currency and convert DKK/EUR to approximate USD
-    // DKK to USD: ~0.14 (1 DKK ≈ 0.14 USD)
-    // EUR to USD: ~1.08 (1 EUR ≈ 1.08 USD)
+    // Check currency and convert to DKK
+    // DKK: keep as is
+    // USD to DKK: ~6.8 (1 USD ≈ 6.8 DKK)
+    // EUR to DKK: ~7.3 (1 EUR ≈ 7.3 DKK)
     if (priceStr.toUpperCase().includes('DKK') || priceStr.toUpperCase().includes('KR')) {
-      return Math.round(number * 0.14); // Convert DKK to USD
+      return Math.round(number); // Already in DKK
+    } else if (priceStr.toUpperCase().includes('USD') || priceStr.toUpperCase().includes('$')) {
+      return usdToDkk(number); // Convert USD to DKK
     } else if (priceStr.toUpperCase().includes('EUR') || priceStr.toUpperCase().includes('€')) {
-      return Math.round(number * 1.08); // Convert EUR to USD
+      return Math.round(number * 7.3); // Convert EUR to DKK
     }
     
-    return Math.round(number); // Assume USD if no currency specified
+    // Assume DKK if no currency specified (most vendors are in Denmark)
+    return Math.round(number);
   }
   return 0;
 }
@@ -104,9 +112,10 @@ function calculateFitScore(vendor: ScrapedVendor): number {
 
 /**
  * Transform scraped vendor data to app Vendor format
+ * Note: Geocoding is done lazily in the map component to avoid blocking vendor loading
  */
 function transformVendor(scraped: ScrapedVendor, index: number): Vendor {
-  // Extract price from various price fields
+  // Extract price from various price fields (now in DKK)
   const price = 
     extractPrice(scraped.base_package_price) ||
     extractPrice(scraped.price_per_person) ||
@@ -134,18 +143,25 @@ function transformVendor(scraped: ScrapedVendor, index: number): Vendor {
   // Determine availability (default to true if not specified)
   const availability = true; // Assume available unless we have data saying otherwise
   
+  // Note: lat, lng, and distanceFromCphCentral will be calculated lazily when needed
+  // (e.g., in the map component) to avoid blocking vendor loading with geocoding requests
+  
   return {
     id: `scraped-${index}`,
     name: scraped.name,
     type: scraped.vendor_type,
     image,
-    priceEstimate: price,
+    priceEstimate: price, // Now in DKK
     location,
     rating,
     fitScore,
     capacity,
     amenities: scraped.amenities || [],
     availability,
+    website: scraped.website,
+    urlSource: scraped.url_source,
+    addressFull: scraped.address_full || undefined,
+    // lat, lng, distanceFromCphCentral will be set lazily when geocoding is done
   };
 }
 
@@ -155,7 +171,6 @@ function transformVendor(scraped: ScrapedVendor, index: number): Vendor {
 export async function loadScrapedVendors(): Promise<Vendor[]> {
   try {
     // Fetch the vendors.json file from the public directory
-    // We'll need to copy it there or serve it via API
     const response = await fetch('/vendors.json');
     
     if (!response.ok) {
@@ -168,7 +183,7 @@ export async function loadScrapedVendors(): Promise<Vendor[]> {
     // Filter out invalid vendors (must have name)
     const validVendors = scrapedVendors.filter(v => v.name && v.name.trim());
     
-    // Transform to app format
+    // Transform to app format (synchronous now - geocoding is done lazily)
     return validVendors.map((vendor, index) => transformVendor(vendor, index));
   } catch (error) {
     console.error('Error loading scraped vendors:', error);

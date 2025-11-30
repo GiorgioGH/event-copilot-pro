@@ -208,36 +208,38 @@ export default function CalendarPanel() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Events Calendar</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col overflow-hidden">
         {loading ? (<div>Loading...</div>) : (
           <>
-            <Calendar
-              mode="single"
-              selected={selected}
-              onSelect={setSelected}
-              modifiers={{ event: eventDates }}
-              modifiersClassNames={{ event: 'bg-primary/30' }}
-            />
+            <div className="flex justify-center mb-4">
+              <Calendar
+                mode="single"
+                selected={selected}
+                onSelect={setSelected}
+                modifiers={{ event: eventDates }}
+                modifiersClassNames={{ event: 'bg-primary/30' }}
+              />
+            </div>
             {/* EVENT LIST/MODIFY/CREATE UI FOR SELECTED DAY */}
             {selected && (
-              <div className="mt-4">
-                <strong>Events on {selected.toLocaleDateString()}:</strong>
+              <div className="mt-2 flex-1 overflow-y-auto">
+                <strong className="text-sm">Events on {selected.toLocaleDateString()}:</strong>
                 <ul className="mt-2 space-y-2">
                   {getEventsOnDay(selected).length === 0 ? (
-                    <li><Button onClick={handleAdd} type="button">Create New Event</Button></li>
+                    <li><Button onClick={handleAdd} type="button" size="sm">Create New Event</Button></li>
                   ) : (
                     getEventsOnDay(selected).map(evt => (
-                      <li key={evt.id} className="border rounded p-2 cursor-pointer" onClick={() => handleEventClick(evt)}>
-                        <div className="font-semibold text-lg">{evt.title}</div>
+                      <li key={evt.id} className="border rounded p-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleEventClick(evt)}>
+                        <div className="font-semibold text-sm">{evt.title}</div>
                         <div className="text-xs text-muted-foreground mb-1">{evt.type} • {evt.status}
                           {evt.time && <> • {evt.time}</>}
                           {evt.location && <> • {evt.location}</>}
                         </div>
-                        <div className="mb-1">{evt.description}</div>
+                        <div className="text-xs mb-1 line-clamp-2">{evt.description}</div>
                         <div className="text-xs mb-1">
                           <strong>Budget:</strong> ${evt.budgetUsed?.toLocaleString() ?? 0} / ${evt.budgetTotal?.toLocaleString() ?? 0}
                         </div>

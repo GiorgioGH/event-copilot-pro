@@ -59,13 +59,19 @@ export interface Vendor {
   name: string;
   type: 'venue' | 'catering' | 'transport' | 'activities' | 'av-equipment' | 'gifts' | 'miscellaneous';
   image: string;
-  priceEstimate: number;
+  priceEstimate: number; // In DKK
   location: string;
   rating: number;
   fitScore: number;
   capacity?: number;
   amenities?: string[];
   availability: boolean;
+  website?: string;
+  urlSource?: string;
+  addressFull?: string;
+  lat?: number;
+  lng?: number;
+  distanceFromCphCentral?: number; // In km
 }
 
 export interface BudgetCategory {

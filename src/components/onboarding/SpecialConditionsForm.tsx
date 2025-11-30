@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, Plus, Mic, Users, UtensilsCrossed, Projector } from 'lucide-react';
+import { X, Plus, Users, UtensilsCrossed, Projector } from 'lucide-react';
 
 const dietaryOptions = [
   'Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'Kosher', 'Nut-Free', 'Dairy-Free'
@@ -18,7 +18,6 @@ const equipmentOptions = [
 const SpecialConditionsForm = () => {
   const { eventSpecialConditions, setEventSpecialConditions } = useEvent();
   const [newSpeaker, setNewSpeaker] = useState('');
-  const [newVendor, setNewVendor] = useState('');
   const [customDietary, setCustomDietary] = useState('');
 
   const addSpeaker = () => {
@@ -66,21 +65,6 @@ const SpecialConditionsForm = () => {
     setEventSpecialConditions({ ...eventSpecialConditions, equipment: updated });
   };
 
-  const addVendor = () => {
-    if (newVendor.trim()) {
-      setEventSpecialConditions({
-        ...eventSpecialConditions,
-        preferredVendors: [...(eventSpecialConditions.preferredVendors || []), newVendor.trim()]
-      });
-      setNewVendor('');
-    }
-  };
-
-  const removeVendor = (index: number) => {
-    const updated = [...(eventSpecialConditions.preferredVendors || [])];
-    updated.splice(index, 1);
-    setEventSpecialConditions({ ...eventSpecialConditions, preferredVendors: updated });
-  };
 
   return (
     <motion.div
@@ -197,44 +181,6 @@ const SpecialConditionsForm = () => {
         </div>
       </div>
 
-      {/* Preferred Vendors */}
-      <div className="p-6 rounded-lg border border-border bg-card">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-            <Mic className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <Label className="text-foreground font-medium">Preferred Vendors</Label>
-            <p className="text-sm text-muted-foreground">Optional: Add vendors you'd like to work with</p>
-          </div>
-        </div>
-        
-        <div className="flex gap-2 mb-3">
-          <Input
-            placeholder="Vendor name"
-            value={newVendor}
-            onChange={(e) => setNewVendor(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addVendor()}
-          />
-          <Button onClick={addVendor} size="icon" variant="secondary">
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          {(eventSpecialConditions.preferredVendors || []).map((vendor, index) => (
-            <Badge key={index} variant="secondary" className="pl-3 pr-1 py-1">
-              {vendor}
-              <button
-                onClick={() => removeVendor(index)}
-                className="ml-2 hover:bg-muted rounded-full p-0.5"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      </div>
     </motion.div>
   );
 };

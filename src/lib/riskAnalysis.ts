@@ -145,11 +145,14 @@ export function analyzeRisks(
   if (venuePreference !== 'either' && selectedVenue) {
     // Check if venue matches preference (we'd need venue data to know indoor/outdoor)
     // For now, assume it matches if selected
+    const distanceInfo = selectedVenue.distanceFromCphCentral 
+      ? ` Distance from CPH Central Station: ${selectedVenue.distanceFromCphCentral} km.`
+      : '';
     risks.push({
       id: 'venue',
       type: 'venue',
       title: 'Venue Preference',
-      description: `Selected venue should be ${venuePreference} - please verify`,
+      description: `Selected venue should be ${venuePreference} - please verify.${distanceInfo}`,
       severity: 'medium',
       mitigation: `Confirm the selected venue is ${venuePreference} as required`,
     });
@@ -163,11 +166,14 @@ export function analyzeRisks(
       mitigation: venuePreference === 'either' ? undefined : `Select a ${venuePreference} venue`,
     });
   } else {
+    const distanceInfo = selectedVenue.distanceFromCphCentral 
+      ? ` Distance from CPH Central Station: ${selectedVenue.distanceFromCphCentral} km.`
+      : '';
     risks.push({
       id: 'venue',
       type: 'venue',
-      title: 'Venue Preference',
-      description: 'Venue preference is flexible',
+      title: 'Venue Location',
+      description: `Venue preference is flexible.${distanceInfo}`,
       severity: 'low',
       mitigation: undefined,
     });
@@ -201,12 +207,15 @@ export function analyzeRisks(
   const estimatedCost = plan.estimatedCost || 0;
   const budgetWithSafety = estimatedCost * 1.1; // 10% safety margin
   
+  // Format DKK
+  const formatDkk = (amount: number) => `${Math.round(amount).toLocaleString('da-DK')} DKK`;
+  
   if (budgetWithSafety > budget) {
     risks.push({
       id: 'budget',
       type: 'budget',
       title: 'Budget Risk',
-      description: `Current budget (with 10% safety margin) is $${Math.round(budgetWithSafety).toLocaleString()}, exceeding available budget of $${budget.toLocaleString()}`,
+      description: `Current budget (with 10% safety margin) is ${formatDkk(budgetWithSafety)}, exceeding available budget of ${formatDkk(budget)}`,
       severity: 'high',
       mitigation: 'Review vendor selections and reduce costs, or increase budget allocation',
     });

@@ -21,6 +21,7 @@ import {
   PieChart
 } from 'lucide-react';
 import type { CopilotEvent } from '@/types/event';
+import { formatDkk } from '@/lib/utils/currency';
 
 interface EventStats {
   totalEvents: number;
@@ -209,7 +210,7 @@ const Analytics = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Budget</p>
-                    <p className="text-3xl font-bold text-foreground">${stats.totalBudget.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-foreground">{formatDkk(stats.totalBudget)}</p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
                     <DollarSign className="w-6 h-6 text-success" />
@@ -229,7 +230,7 @@ const Analytics = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Average Budget</p>
-                    <p className="text-3xl font-bold text-foreground">${Math.round(stats.averageBudget).toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-foreground">{formatDkk(Math.round(stats.averageBudget))}</p>
                   </div>
                   <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
                     <Target className="w-6 h-6 text-accent" />
@@ -284,15 +285,15 @@ const Analytics = () => {
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Total Budget</span>
-                      <span className="text-foreground font-medium">${stats.totalBudget.toLocaleString()}</span>
+                      <span className="text-foreground font-medium">{formatDkk(stats.totalBudget)}</span>
                     </div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Budget Used</span>
-                      <span className="text-foreground font-medium">${stats.totalUsed.toLocaleString()}</span>
+                      <span className="text-foreground font-medium">{formatDkk(stats.totalUsed)}</span>
                     </div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Remaining</span>
-                      <span className="text-success font-medium">${(stats.totalBudget - stats.totalUsed).toLocaleString()}</span>
+                      <span className="text-success font-medium">{formatDkk(stats.totalBudget - stats.totalUsed)}</span>
                     </div>
                     <Progress value={budgetUtilization} className="h-3 mt-3" />
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -396,7 +397,7 @@ const Analytics = () => {
                                 <div className="flex justify-between text-xs mb-1">
                                   <span className="text-muted-foreground">Budget</span>
                                   <span className="text-foreground">
-                                    ${budgetUsed.toLocaleString()} / ${budgetTotal.toLocaleString()}
+                                    {formatDkk(budgetUsed)} / {formatDkk(budgetTotal)}
                                   </span>
                                 </div>
                                 <Progress value={budgetPercent} className="h-1.5" />

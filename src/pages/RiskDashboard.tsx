@@ -266,73 +266,6 @@ const RiskDashboard = () => {
           </motion.div>
         </div>
 
-        {/* Paul AI Assistant Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-8"
-        >
-          <Card className="bg-gradient-to-br from-accent/10 to-primary/5 border-accent/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="w-6 h-6 text-accent" />
-                Paul AI Assistant
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {getPaulSuggestions(riskItems).map((suggestion, index) => {
-                  const priorityColors = {
-                    high: 'border-destructive/30 bg-destructive/10',
-                    medium: 'border-warning/30 bg-warning/10',
-                    low: 'border-success/30 bg-success/10',
-                  };
-                  
-                  return (
-                    <motion.div
-                      key={index}
-                      className={`p-4 rounded-lg border ${priorityColors[suggestion.priority]}`}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.35 + index * 0.1 }}
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-8 h-8 rounded-full ${priorityColors[suggestion.priority]} flex items-center justify-center shrink-0`}>
-                          {suggestion.priority === 'high' ? (
-                            <AlertCircle className="w-4 h-4 text-destructive" />
-                          ) : suggestion.priority === 'medium' ? (
-                            <Lightbulb className="w-4 h-4 text-warning" />
-                          ) : (
-                            <CheckCircle2 className="w-4 h-4 text-success" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1">{suggestion.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-3">{suggestion.description}</p>
-                          {suggestion.actionItems.length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-xs font-medium text-muted-foreground">Recommended Actions:</p>
-                              <ul className="space-y-1">
-                                {suggestion.actionItems.map((action, actionIndex) => (
-                                  <li key={actionIndex} className="text-sm text-foreground flex items-start gap-2">
-                                    <span className="text-accent mt-1">•</span>
-                                    <span>{action}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Risk Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {riskItems.map((risk, index) => {
@@ -375,6 +308,73 @@ const RiskDashboard = () => {
             );
           })}
         </div>
+
+        {/* Paul AI Assistant Section - Moved below risk cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8"
+        >
+          <Card className="bg-gradient-to-br from-accent/10 to-primary/5 border-accent/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="w-6 h-6 text-accent" />
+                Paul AI Assistant
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {getPaulSuggestions(riskItems).map((suggestion, index) => {
+                  const priorityColors = {
+                    high: 'border-destructive/30 bg-destructive/10',
+                    medium: 'border-warning/30 bg-warning/10',
+                    low: 'border-success/30 bg-success/10',
+                  };
+                  
+                  return (
+                    <motion.div
+                      key={index}
+                      className={`p-4 rounded-lg border ${priorityColors[suggestion.priority]}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.55 + index * 0.1 }}
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-8 h-8 rounded-full ${priorityColors[suggestion.priority]} flex items-center justify-center shrink-0`}>
+                          {suggestion.priority === 'high' ? (
+                            <AlertCircle className="w-4 h-4 text-destructive" />
+                          ) : suggestion.priority === 'medium' ? (
+                            <Lightbulb className="w-4 h-4 text-warning" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 text-success" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-foreground mb-1">{suggestion.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-3">{suggestion.description}</p>
+                          {suggestion.actionItems.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium text-muted-foreground">Recommended Actions:</p>
+                              <ul className="space-y-1">
+                                {suggestion.actionItems.map((action, actionIndex) => (
+                                  <li key={actionIndex} className="text-sm text-foreground flex items-start gap-2">
+                                    <span className="text-accent mt-1">•</span>
+                                    <span>{action}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </main>
     </>
   );

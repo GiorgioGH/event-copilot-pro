@@ -7,6 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, MapPin, Users, DollarSign } from 'lucide-react';
+import { formatDkk } from '@/lib/utils/currency';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -121,16 +122,21 @@ const EventBasicsForm = () => {
         <div>
           <Label htmlFor="budget" className="text-foreground font-medium">
             <DollarSign className="w-4 h-4 inline mr-2" />
-            Budget (USD)
+            Budget (DKK)
           </Label>
           <Input
             id="budget"
             type="number"
-            placeholder="10000"
+            placeholder="68000"
             value={eventBasics.budget || ''}
             onChange={(e) => setEventBasics({ ...eventBasics, budget: parseInt(e.target.value) || 0 })}
             className="mt-2"
           />
+          {eventBasics.budget > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {formatDkk(eventBasics.budget)}
+            </p>
+          )}
         </div>
 
         {/* Location */}

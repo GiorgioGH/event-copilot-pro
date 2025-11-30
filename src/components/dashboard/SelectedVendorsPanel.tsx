@@ -7,6 +7,7 @@ import { loadScrapedVendors } from '@/lib/vendors';
 import { Vendor } from '@/types/event';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { formatDkk } from '@/lib/utils/currency';
 
 const SelectedVendorsPanel = () => {
   const { selectedVendors, setSelectedVendors } = useEvent();
@@ -74,7 +75,7 @@ const SelectedVendorsPanel = () => {
                   <p className="text-xs text-muted-foreground capitalize">{vendor.type.replace('-', ' ')}</p>
                 </div>
                 <Badge variant="outline" className="shrink-0 text-xs">
-                  ${vendor.priceEstimate.toLocaleString()}
+                  {formatDkk(vendor.priceEstimate)}
                 </Badge>
               </div>
               <button

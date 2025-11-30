@@ -29,6 +29,9 @@ import {
 } from 'lucide-react';
 import { Vendor } from '@/types/event';
 import { loadScrapedVendors, getVendorsByType } from '@/lib/vendors';
+import { formatDkk } from '@/lib/utils/currency';
+import { formatDistance } from '@/lib/utils/distance';
+import VendorMap from '@/components/vendors/VendorMap';
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   venue: Building,
@@ -41,7 +44,7 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const Vendors = () => {
-  const { selectedVendors, setSelectedVendors } = useEvent();
+  const { selectedVendors, setSelectedVendors, currentPlan } = useEvent();
   const [compareMode, setCompareMode] = useState(false);
   const [allVendors, setAllVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,12 +105,6 @@ const Vendors = () => {
               {!loading && <span className="ml-2 text-accent">({allVendors.length} vendors available)</span>}
             </p>
           </div>
-          {selectedVendors.length >= 2 && (
-            <Button variant="accent" onClick={() => setCompareMode(!compareMode)}>
-              <ArrowLeftRight className="w-4 h-4 mr-2" />
-              Compare ({selectedVendors.length})
-            </Button>
-          )}
         </motion.div>
 
         {/* Loading State */}
@@ -128,6 +125,37 @@ const Vendors = () => {
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Comparison Table - moved below map */}
+
+        {/* Vendor Map */}
+        {!loading && allVendors.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <VendorMap
+              vendors={allVendors}
+              selectedVendors={selectedVendors}
+              onToggleVendor={toggleVendor}
+            />
+          </motion.div>
+        )}
+
+        {/* Compare Button - below map */}
+        {!loading && selectedVendors.length >= 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 flex justify-center"
+          >
+            <Button variant="accent" size="lg" onClick={() => setCompareMode(!compareMode)}>
+              <ArrowLeftRight className="w-4 h-4 mr-2" />
+              {compareMode ? 'Hide' : 'Compare'} ({selectedVendors.length})
+            </Button>
+          </motion.div>
         )}
 
         {/* Comparison Table */}
@@ -164,7 +192,29 @@ const Vendors = () => {
                       <tr className="border-b border-border">
                         <td className="py-3 px-4 text-muted-foreground">Price</td>
                         {selectedForComparison.map(vendor => (
-                          <td key={vendor.id} className="py-3 px-4 font-medium">${vendor.priceEstimate.toLocaleString()}</td>
+                          <td key={vendor.id} className="py-3 px-4 font-medium">{formatDkk(vendor.priceEstimate)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-b border-border">
+                        <td className="py-3 px-4 text-muted-foreground">Price per Person</td>
+                        {selectedForComparison.map(vendor => {
+                          const participants = currentPlan?.basics.participants || 1;
+                          const pricePerPerson = vendor.priceEstimate / participants;
+                          return (
+                            <td key={vendor.id} className="py-3 px-4 font-medium">
+                              {formatDkk(Math.round(pricePerPerson))}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                      <tr className="border-b border-border">
+                        <td className="py-3 px-4 text-muted-foreground">Distance from CPH Central</td>
+                        {selectedForComparison.map(vendor => (
+                          <td key={vendor.id} className="py-3 px-4">
+                            {vendor.distanceFromCphCentral 
+                              ? formatDistance(vendor.distanceFromCphCentral)
+                              : 'N/A'}
+                          </td>
                         ))}
                       </tr>
                       <tr className="border-b border-border">
@@ -179,7 +229,7 @@ const Vendors = () => {
                         ))}
                       </tr>
                       <tr className="border-b border-border">
-                        <td className="py-3 px-4 text-muted-foreground">Distance</td>
+                        <td className="py-3 px-4 text-muted-foreground">Location</td>
                         {selectedForComparison.map(vendor => (
                           <td key={vendor.id} className="py-3 px-4">{vendor.location}</td>
                         ))}
@@ -299,7 +349,7 @@ const Vendors = () => {
                             <div className="flex items-center gap-1">
                               <DollarSign className="w-4 h-4 text-muted-foreground" />
                               <span className="text-lg font-semibold text-foreground">
-                                ${vendor.priceEstimate.toLocaleString()}
+                                {formatDkk(vendor.priceEstimate)}
                               </span>
                             </div>
                           </div>

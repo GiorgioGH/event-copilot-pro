@@ -10,6 +10,7 @@ import { Vendor } from '@/types/event';
 import { useEvent } from '@/contexts/EventContext';
 import { useToast } from '@/hooks/use-toast';
 import { loadScrapedVendors } from '@/lib/vendors';
+import { formatDkk } from '@/lib/utils/currency';
 
 const typeLabels = {
   venue: 'Venue',
@@ -126,7 +127,7 @@ const VendorRecommendations = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-3 h-3" />
-                        ${vendor.priceEstimate.toLocaleString()}
+                        {formatDkk(vendor.priceEstimate)}
                       </span>
                     </div>
                     

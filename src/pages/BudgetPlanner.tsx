@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { BudgetCategory } from '@/types/event';
 import { loadScrapedVendors } from '@/lib/vendors';
+import { formatDkk } from '@/lib/utils/currency';
+import { getBookingUrlForType, getBookingUrl } from '@/lib/utils/booking';
+import { ExternalLink } from 'lucide-react';
 
 const initialCategories: BudgetCategory[] = [
   { id: 'venue', name: 'Venue', allocated: 5000, recommended: 5000, spent: 4500, icon: 'Building' },
@@ -210,11 +213,11 @@ const BudgetPlanner = () => {
                   <div>
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-semibold text-foreground">
-                        Estimated Total: ${totalAllocated.toLocaleString()}
+                        Estimated Total: {formatDkk(totalAllocated)}
                       </span>
                       <span className="text-muted-foreground">vs</span>
                       <span className="text-lg font-semibold text-foreground">
-                        Budget: ${totalBudget.toLocaleString()}
+                        Budget: {formatDkk(totalBudget)}
                       </span>
                     </div>
                     <Badge className={`mt-1 ${isOverBudget ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-success/10 text-success border-success/20'} border`}>
@@ -225,7 +228,7 @@ const BudgetPlanner = () => {
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Spent so far</p>
-                    <p className="text-xl font-bold text-foreground">${totalSpent.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-foreground">{formatDkk(totalSpent)}</p>
                   </div>
                   <Button 
                     variant="accent" 
@@ -291,7 +294,7 @@ const BudgetPlanner = () => {
                       
                       toast({
                         title: "Budget Optimized",
-                        description: `Selected ${vendorsToSelect.length} vendors with total cost of $${totalCost.toLocaleString()}. ${totalCost > totalBudget ? 'Still over budget - consider increasing budget or removing more vendors.' : 'Within budget!'}`,
+                        description: `Selected ${vendorsToSelect.length} vendors with total cost of ${formatDkk(totalCost)}. ${totalCost > totalBudget ? 'Still over budget - consider increasing budget or removing more vendors.' : 'Within budget!'}`,
                       });
                     }}
                   >
@@ -325,7 +328,7 @@ const BudgetPlanner = () => {
                 <div>
                   <span className="text-sm font-medium text-foreground">Projected final cost: </span>
                   <span className="text-sm text-muted-foreground">
-                    92–108% of set budget (${Math.round(totalBudget * 0.92).toLocaleString()} – ${Math.round(totalBudget * 1.08).toLocaleString()})
+                    92–108% of set budget ({formatDkk(Math.round(totalBudget * 0.92))} – {formatDkk(Math.round(totalBudget * 1.08))})
                   </span>
                 </div>
               </div>
@@ -367,12 +370,12 @@ const BudgetPlanner = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">AI Recommended</span>
-                        <span className="text-foreground font-medium">${category.recommended.toLocaleString()}</span>
+                        <span className="text-foreground font-medium">{formatDkk(category.recommended)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Allocated</span>
                         <span className={`font-medium ${isOverAllocated ? 'text-warning' : 'text-foreground'}`}>
-                          ${category.allocated.toLocaleString()}
+                          {formatDkk(category.allocated)}
                         </span>
                       </div>
                     </div>
@@ -386,18 +389,51 @@ const BudgetPlanner = () => {
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>$0</span>
-                        <span>${(category.recommended * 2).toLocaleString()}</span>
+                        <span>0 DKK</span>
+                        <span>{formatDkk(category.recommended * 2)}</span>
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-border">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-muted-foreground">Spent</span>
-                        <span className="text-foreground">${category.spent.toLocaleString()} ({spentPercent}%)</span>
+                        <span className="text-foreground">{formatDkk(category.spent)} ({spentPercent}%)</span>
                       </div>
                       <Progress value={spentPercent} className="h-1.5" />
                     </div>
+
+                    {/* Book Button */}
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() => {
+                        // Get selected vendor for this category type, or use generic booking link
+                        const vendorTypeMap: Record<string, string> = {
+                          'venue': 'venue',
+                          'catering': 'catering',
+                          'transport': 'transport',
+                          'activities': 'activities',
+                          'av': 'av-equipment',
+                          'gifts': 'gifts',
+                          'misc': 'miscellaneous',
+                        };
+                        const vendorType = vendorTypeMap[category.id];
+                        
+                        // Find selected vendor of this type
+                        const selectedVendor = allVendors.find((v: any) => 
+                          selectedVendors.includes(v.id) && v.type === vendorType
+                        );
+                        
+                        const bookingUrl = selectedVendor 
+                          ? getBookingUrl(selectedVendor, currentPlan)
+                          : getBookingUrlForType(vendorType);
+                        
+                        window.open(bookingUrl, '_blank');
+                      }}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Book {category.name}
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
