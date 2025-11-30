@@ -14,18 +14,19 @@ import {
   MessageSquare, 
   Mail, 
   Phone, 
-  Video, 
   Bot, 
   Store,
   Send,
-  Paperclip,
-  Calendar,
-  Building,
-  Sparkles
+  Sparkles,
+  PhoneCall,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getSponsorSuggestions, Contact, ChatMessage } from '@/lib/sponsors';
 import { supabase } from '@/integrations/supabase/client';
+
+// AI Call Webhook URL
+const AI_CALL_WEBHOOK_URL = "https://clemens07.app.n8n.cloud/webhook/call";
 
 const Communication = () => {
   const { currentPlan, selectedVendors } = useEvent();
@@ -34,6 +35,7 @@ const Communication = () => {
   const [messageInput, setMessageInput] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [sponsors, setSponsors] = useState<Contact[]>([]);
+  const [isCallingAI, setIsCallingAI] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -211,43 +213,78 @@ const Communication = () => {
     }
   };
 
-  const createZoomMeeting = (contactId: string) => {
-    // Generate mock Zoom link
-    const zoomLink = `https://zoom.us/j/${Math.random().toString(36).substring(7)}`;
+  // AI Call function - similar to chat webhook handling
+  const handleAICall = async () => {
+    setIsCallingAI(true);
     
-    const zoomMessage: ChatMessage = {
-      id: `zoom-${Date.now()}`,
-      sender: 'me',
-      message: `I've created a Zoom meeting. Join here: ${zoomLink}`,
-      timestamp: new Date(),
-    };
-    
-    // Update contacts
-    setContacts(prev => prev.map(contact => {
-      if (contact.id === contactId) {
-        return {
-          ...contact,
-          messages: [...contact.messages, zoomMessage],
-        };
+    try {
+      const response = await fetch(AI_CALL_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `Call about ${currentPlan?.basics?.name || "Event"}`,
+          eventName: currentPlan?.basics?.name || "Event",
+          eventType: currentPlan?.basics?.type || "corporate",
+          participants: currentPlan?.basics?.participants || 0,
+          date: currentPlan?.basics?.dateRange?.start || null,
+          selectedVendors: contacts.map(c => c.name),
+          contact: currentContact?.name || null,
+          contactEmail: currentContact?.email || null,
+          contactPhone: currentContact?.phone || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Call failed: ${response.status}`);
       }
-      return contact;
-    }));
-    
-    // Update sponsors
-    setSponsors(prev => prev.map(sponsor => {
-      if (sponsor.id === contactId) {
-        return {
-          ...sponsor,
-          messages: [...sponsor.messages, zoomMessage],
-        };
+
+      let rawData = await response.json();
+      
+      // Handle n8n array responses
+      if (Array.isArray(rawData)) {
+        rawData = rawData[0];
       }
-      return sponsor;
-    }));
-    
-    toast({
-      title: "Zoom Meeting Created",
-      description: "The meeting link has been sent to the contact via email.",
-    });
+
+      console.log("AI Call raw response:", rawData);
+
+      // Extract content from n8n output wrapper (similar to chat)
+      let responseMessage = "";
+      if (typeof rawData === "string") {
+        responseMessage = rawData;
+      } else if (rawData.output) {
+        // n8n wraps response in output property
+        try {
+          const parsed = JSON.parse(rawData.output);
+          responseMessage = parsed.message || parsed.response || parsed.output || rawData.output;
+        } catch {
+          responseMessage = rawData.output;
+        }
+      } else if (rawData.message) {
+        responseMessage = rawData.message;
+      } else if (rawData.response) {
+        responseMessage = rawData.response;
+      } else {
+        responseMessage = "AI Call initiated successfully!";
+      }
+
+      console.log("AI Call response message:", responseMessage);
+
+      toast({
+        title: "📞 AI Call Initiated",
+        description: responseMessage,
+      });
+    } catch (error) {
+      console.error("AI Call error:", error);
+      toast({
+        title: "Call Failed",
+        description: "Could not connect to AI call service. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCallingAI(false);
+    }
   };
 
   // Derive currentContact from updated arrays to always show latest messages
@@ -393,12 +430,22 @@ const Communication = () => {
                           </div>
                         </div>
                         <Button
-                          variant="outline"
                           size="sm"
-                          onClick={() => createZoomMeeting(currentContact.id)}
+                          onClick={handleAICall}
+                          disabled={isCallingAI}
+                          className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white gap-2"
                         >
-                          <Video className="w-4 h-4 mr-2" />
-                          Create Zoom Meeting
+                          {isCallingAI ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Calling...
+                            </>
+                          ) : (
+                            <>
+                              <PhoneCall className="w-4 h-4" />
+                              AI Call
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardHeader>
@@ -571,12 +618,22 @@ const Communication = () => {
                           </div>
                         </div>
                         <Button
-                          variant="outline"
                           size="sm"
-                          onClick={() => createZoomMeeting(currentContact.id)}
+                          onClick={handleAICall}
+                          disabled={isCallingAI}
+                          className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white gap-2"
                         >
-                          <Video className="w-4 h-4 mr-2" />
-                          Create Zoom Meeting
+                          {isCallingAI ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Calling...
+                            </>
+                          ) : (
+                            <>
+                              <PhoneCall className="w-4 h-4" />
+                              AI Call
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardHeader>
