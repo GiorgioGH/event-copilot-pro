@@ -40,9 +40,9 @@ const N8nChat = () => {
     {
       id: '1',
       role: 'assistant',
-      content: `👋 Hi! I'm your Event Planning Assistant.
+      content: `👋 Hi, I'm **Paul** – your Event Pal!
 
-Tell me about the event you want to create - the type, date, number of participants, budget, location, and any special requirements. I'll help you set everything up!`,
+Tell me about the event you'd like to plan and I'll help you set everything up. Let's create something amazing together! ✨`,
       timestamp: new Date(),
     }
   ]);
@@ -307,9 +307,9 @@ Tell me about the event you want to create - the type, date, number of participa
     setMessages([{
       id: '1',
       role: 'assistant',
-      content: `👋 Hi! I'm your Event Planning Assistant.
+      content: `👋 Hi, I'm **Paul** – your Event Pal!
 
-Tell me about the event you want to create - the type, date, number of participants, budget, location, and any special requirements. I'll help you set everything up!`,
+Tell me about the event you'd like to plan and I'll help you set everything up. Let's create something amazing together! ✨`,
       timestamp: new Date(),
     }]);
     setEventCreated(false);
@@ -335,8 +335,8 @@ Tell me about the event you want to create - the type, date, number of participa
   return (
     <>
       <Helmet>
-        <title>n8n Chat - SME Event Copilot</title>
-        <meta name="description" content="Chat interface connected to n8n workflow automation." />
+        <title>Chat with Paul - EventPaul</title>
+        <meta name="description" content="Chat with Paul, your AI event planning assistant." />
       </Helmet>
       
       <DashboardNav />
@@ -354,8 +354,8 @@ Tell me about the event you want to create - the type, date, number of participa
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">n8n Chat</h1>
-                <p className="text-sm text-muted-foreground">Connected to your workflow automation</p>
+                <h1 className="text-2xl font-bold text-foreground">Chat with Paul</h1>
+                <p className="text-sm text-muted-foreground">Your AI Event Planning Assistant</p>
               </div>
             </div>
             <Button 

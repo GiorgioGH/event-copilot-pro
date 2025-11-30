@@ -1,0 +1,161 @@
+[
+  {
+    "id": "EVT_CONCEPT_04_SUMMER",
+    "basics": {
+      "name": "Reffen Summer Social",
+      "type": "team-building",
+      "dateRange": {
+        "start": "2025-08-22T16:00:00.000Z",
+        "end": "2025-08-22T21:00:00.000Z"
+      },
+      "participants": 48,
+      "budget": 50000,
+      "location": "Refshaleøen"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 30,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "outdoor"
+    },
+    "specialConditions": {
+      "speakerNames": [],
+      "dietaryRestrictions": [
+        "Vegetarian options available via street food stalls"
+      ],
+      "equipment": [
+        "Pre-paid food/drink cards"
+      ],
+      "preferredVendors": [
+        "Reffen"
+      ]
+    },
+    "riskScore": "low",
+    "estimatedCost": 48000,
+    "status": "planning",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T12:00:00.000Z"
+  },
+  {
+    "id": "EVT_CONCEPT_01_AUTUMN",
+    "basics": {
+      "name": "Nordhavn Heights: The Krane & Silo",
+      "type": "company-dinner",
+      "dateRange": {
+        "start": "2025-09-12T17:00:00.000Z",
+        "end": "2025-09-12T22:00:00.000Z"
+      },
+      "participants": 40,
+      "budget": 95000,
+      "location": "Nordhavn"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": false,
+      "timelineFlexibility": 15,
+      "preferredTimeframe": "evening",
+      "venuePreference": "indoor"
+    },
+    "specialConditions": {
+      "speakerNames": [],
+      "dietaryRestrictions": [
+        "Gourmet dietary handling"
+      ],
+      "equipment": [
+        "Projector for welcome speech at The Krane"
+      ],
+      "preferredVendors": [
+        "The Krane",
+        "The Silo (Restaurant Silo)"
+      ]
+    },
+    "riskScore": "low",
+    "estimatedCost": 92000,
+    "status": "confirmed",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T12:00:00.000Z"
+  },
+  {
+    "id": "EVT_CONCEPT_02_ACTIVE",
+    "basics": {
+      "name": "Urban Team Challenge at Portside",
+      "type": "team-building",
+      "dateRange": {
+        "start": "2025-10-03T14:00:00.000Z",
+        "end": "2025-10-03T20:00:00.000Z"
+      },
+      "participants": 32,
+      "budget": 65000,
+      "location": "Østerbro/Nordhavn"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 0,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "indoor"
+    },
+    "specialConditions": {
+      "speakerNames": [],
+      "dietaryRestrictions": [
+        "Spanish/Tapas style"
+      ],
+      "equipment": [
+        "Team building props",
+        "Sound system"
+      ],
+      "preferredVendors": [
+        "Portside (Pakhus 11)",
+        "Copenhagen Team Building Adventures",
+        "Tapas Bar Catering"
+      ]
+    },
+    "riskScore": "medium",
+    "estimatedCost": 62000,
+    "status": "planning",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T12:00:00.000Z"
+  },
+  {
+    "id": "EVT_CONCEPT_03_INDOOR",
+    "basics": {
+      "name": "Distillery Gin Workshop",
+      "type": "networking",
+      "dateRange": {
+        "start": "2025-11-07T16:00:00.000Z",
+        "end": "2025-11-07T20:00:00.000Z"
+      },
+      "participants": 50,
+      "budget": 55000,
+      "location": "Amager"
+    },
+    "requirements": {
+      "includeLunch": false,
+      "accessibilityNeeded": true,
+      "timelineFlexibility": 45,
+      "preferredTimeframe": "afternoon",
+      "venuePreference": "indoor"
+    },
+    "specialConditions": {
+      "speakerNames": [
+        "Head Distiller"
+      ],
+      "dietaryRestrictions": [
+        "Alcohol-free options required"
+      ],
+      "equipment": [
+        "Tasting glasses",
+        "Distillation kits"
+      ],
+      "preferredVendors": [
+        "Copenhagen Distillery"
+      ]
+    },
+    "riskScore": "low",
+    "estimatedCost": 52000,
+    "status": "draft",
+    "createdAt": "2025-11-30T10:00:00.000Z",
+    "updatedAt": "2025-11-30T12:00:00.000Z"
+  }
+]

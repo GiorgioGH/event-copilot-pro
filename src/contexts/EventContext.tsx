@@ -66,49 +66,93 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Load events from localStorage on mount
+  // Load events from localStorage on mount, or load pre-built events if none exist
   useEffect(() => {
-    const saved = localStorage.getItem('events');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const eventsMap = new Map<string, EventData>();
-        Object.entries(parsed).forEach(([id, data]: [string, any]) => {
-          const plan = data.plan ? {
-            ...data.plan,
-            createdAt: new Date(data.plan.createdAt),
-            updatedAt: new Date(data.plan.updatedAt),
-            // Ensure specialConditions has proper structure
-            specialConditions: data.plan.specialConditions ? {
-              speakerNames: data.plan.specialConditions.speakerNames || [],
-              dietaryRestrictions: data.plan.specialConditions.dietaryRestrictions || [],
-              equipment: data.plan.specialConditions.equipment || [],
-              preferredVendors: data.plan.specialConditions.preferredVendors || [],
-            } : {
-              speakerNames: [],
-              dietaryRestrictions: [],
-              equipment: [],
-              preferredVendors: [],
-            },
-          } : null;
-          eventsMap.set(id, {
-            plan,
-            selectedVendors: data.selectedVendors || [],
-            tasks: (data.tasks || []).map((t: any) => ({ ...t, dueDate: new Date(t.dueDate) })),
-            invitedPeople: data.invitedPeople || [],
+    const loadEvents = async () => {
+      const saved = localStorage.getItem('events');
+      
+      if (saved) {
+        // Load from localStorage
+        try {
+          const parsed = JSON.parse(saved);
+          const eventsMap = new Map<string, EventData>();
+          Object.entries(parsed).forEach(([id, data]: [string, any]) => {
+            const plan = data.plan ? {
+              ...data.plan,
+              createdAt: new Date(data.plan.createdAt),
+              updatedAt: new Date(data.plan.updatedAt),
+              // Ensure specialConditions has proper structure
+              specialConditions: data.plan.specialConditions ? {
+                speakerNames: data.plan.specialConditions.speakerNames || [],
+                dietaryRestrictions: data.plan.specialConditions.dietaryRestrictions || [],
+                equipment: data.plan.specialConditions.equipment || [],
+                preferredVendors: data.plan.specialConditions.preferredVendors || [],
+              } : {
+                speakerNames: [],
+                dietaryRestrictions: [],
+                equipment: [],
+                preferredVendors: [],
+              },
+            } : null;
+            eventsMap.set(id, {
+              plan,
+              selectedVendors: data.selectedVendors || [],
+              tasks: (data.tasks || []).map((t: any) => ({ ...t, dueDate: new Date(t.dueDate) })),
+              invitedPeople: data.invitedPeople || [],
+            });
           });
-        });
-        setEvents(eventsMap);
-        const currentId = localStorage.getItem('currentEventId');
-        if (currentId && eventsMap.has(currentId)) {
-          setCurrentEventId(currentId);
-        } else if (eventsMap.size > 0) {
-          setCurrentEventId(Array.from(eventsMap.keys())[0]);
+          setEvents(eventsMap);
+          const currentId = localStorage.getItem('currentEventId');
+          if (currentId && eventsMap.has(currentId)) {
+            setCurrentEventId(currentId);
+          } else if (eventsMap.size > 0) {
+            setCurrentEventId(Array.from(eventsMap.keys())[0]);
+          }
+        } catch (e) {
+          console.error('Failed to load events:', e);
         }
-      } catch (e) {
-        console.error('Failed to load events:', e);
+      } else {
+        // No saved events - load pre-built events from past_events.json
+        try {
+          const response = await fetch('/past_events.json');
+          if (response.ok) {
+            const pastEvents: EventPlan[] = await response.json();
+            const eventsMap = new Map<string, EventData>();
+            
+            pastEvents.forEach((event: any) => {
+              const plan: EventPlan = {
+                ...event,
+                createdAt: new Date(event.createdAt),
+                updatedAt: new Date(event.updatedAt),
+                basics: {
+                  ...event.basics,
+                  dateRange: {
+                    start: event.basics.dateRange?.start ? new Date(event.basics.dateRange.start) : null,
+                    end: event.basics.dateRange?.end ? new Date(event.basics.dateRange.end) : null,
+                  },
+                },
+              };
+              eventsMap.set(event.id, {
+                plan,
+                selectedVendors: [],
+                tasks: [],
+                invitedPeople: [],
+              });
+            });
+            
+            setEvents(eventsMap);
+            if (eventsMap.size > 0) {
+              setCurrentEventId(Array.from(eventsMap.keys())[0]);
+            }
+            console.log(`Loaded ${eventsMap.size} pre-built events`);
+          }
+        } catch (e) {
+          console.error('Failed to load pre-built events:', e);
+        }
       }
-    }
+    };
+    
+    loadEvents();
   }, []);
 
   // Save events to localStorage whenever they change
