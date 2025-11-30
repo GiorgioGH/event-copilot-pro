@@ -135,58 +135,34 @@ const Communication = () => {
       const emailSubject = `Inquiry about ${contact.name} - ${eventName}`;
       const emailBody = `Hello ${contact.name},\n\n${messageToSend}\n\n---\nEvent Details:\nEvent: ${eventName}\nDate: ${eventDate}\nParticipants: ${participants}\n\nBest regards,\n${userName}\n${userEmail}`;
 
-      // Call local email server (or Supabase Edge Function as fallback)
+      // Use local email server directly
       const EMAIL_SERVER_URL = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       
-      let response;
-      try {
-        // Try local email server first
-        response = await fetch(`${EMAIL_SERVER_URL}/send-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: contact.email,
-            subject: emailSubject,
-            body: emailBody,
-            fromEmail: userEmail,
-            fromName: userName,
-          }),
-        });
-      } catch (localError) {
-        console.log('Local email server not available, trying Supabase...');
-        // Fallback to Supabase Edge Function
-        response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            to: contact.email,
-            subject: emailSubject,
-            body: emailBody,
-            fromEmail: userEmail,
-            fromName: userName,
-          }),
-        });
+      const response = await fetch(`${EMAIL_SERVER_URL}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: contact.email,
+          subject: emailSubject,
+          body: emailBody,
+          fromEmail: userEmail,
+          fromName: userName,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Email server returned ${response.status}: ${response.statusText}`);
       }
-
+      
       const result = await response.json();
 
-      if (result.mailtoLink) {
-        // Gmail API not configured, open mailto: link
-        window.location.href = result.mailtoLink;
-        toast({
-          title: "Email Client Opened",
-          description: "Your email client has been opened with the message. Please send it manually.",
-        });
-      } else if (result.success) {
+      if (result.success) {
         toast({
           title: "Message Sent",
-          description: "Your message has been sent via email.",
+          description: `Email sent successfully to ${contact.email}`,
         });
       } else {
         throw new Error(result.error || 'Failed to send email');
