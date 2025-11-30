@@ -74,8 +74,25 @@ export const EventProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const parsed = JSON.parse(saved);
         const eventsMap = new Map<string, EventData>();
         Object.entries(parsed).forEach(([id, data]: [string, any]) => {
+          const plan = data.plan ? {
+            ...data.plan,
+            createdAt: new Date(data.plan.createdAt),
+            updatedAt: new Date(data.plan.updatedAt),
+            // Ensure specialConditions has proper structure
+            specialConditions: data.plan.specialConditions ? {
+              speakerNames: data.plan.specialConditions.speakerNames || [],
+              dietaryRestrictions: data.plan.specialConditions.dietaryRestrictions || [],
+              equipment: data.plan.specialConditions.equipment || [],
+              preferredVendors: data.plan.specialConditions.preferredVendors || [],
+            } : {
+              speakerNames: [],
+              dietaryRestrictions: [],
+              equipment: [],
+              preferredVendors: [],
+            },
+          } : null;
           eventsMap.set(id, {
-            plan: data.plan ? { ...data.plan, createdAt: new Date(data.plan.createdAt), updatedAt: new Date(data.plan.updatedAt) } : null,
+            plan,
             selectedVendors: data.selectedVendors || [],
             tasks: (data.tasks || []).map((t: any) => ({ ...t, dueDate: new Date(t.dueDate) })),
             invitedPeople: data.invitedPeople || [],

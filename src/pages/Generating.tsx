@@ -30,7 +30,12 @@ const Generating = () => {
             id: `event-${Date.now()}`,
             basics: eventBasics as any,
             requirements: eventRequirements as any,
-            specialConditions: eventSpecialConditions as any,
+            specialConditions: {
+              speakerNames: eventSpecialConditions.speakerNames || [],
+              dietaryRestrictions: eventSpecialConditions.dietaryRestrictions || [],
+              equipment: eventSpecialConditions.equipment || [],
+              preferredVendors: eventSpecialConditions.preferredVendors || [],
+            },
             riskScore: 'low' as const,
             estimatedCost: eventBasics.budget ? eventBasics.budget * 0.85 : 10000,
             status: 'planning' as const,
