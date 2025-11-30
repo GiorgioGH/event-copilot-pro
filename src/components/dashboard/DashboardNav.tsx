@@ -8,7 +8,8 @@ import {
   BarChart3,
   Settings,
   Smartphone,
-  Store
+  Store,
+  MessageSquare
 } from 'lucide-react';
 
 const navItems = [
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/budget', label: 'Budget Planner', icon: DollarSign },
   { to: '/vendors', label: 'Vendors', icon: Store },
   { to: '/team', label: 'Team', icon: Users },
+  { to: '/communication', label: 'Communication', icon: MessageSquare },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/day-of', label: 'Day-of Mode', icon: Smartphone },
 ];

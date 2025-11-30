@@ -152,131 +152,200 @@ const EventSummaryCard = () => {
             </div>
           </DialogHeader>
           <div className="space-y-6 mt-4">
-            <div>
-              <h3 className="font-semibold mb-2">Event Basics</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <Label className="text-muted-foreground">Event Name</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedPlan?.basics.name || ''}
-                      onChange={(e) => setEditedPlan(prev => prev ? {
-                        ...prev,
-                        basics: { ...prev.basics, name: e.target.value }
-                      } : null)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <div className="mt-1">{currentPlan.basics.name || 'Untitled'}</div>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Type</Label>
-                  <div className="mt-1 capitalize">{currentPlan.basics.type?.replace('-', ' ')}</div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Date</Label>
-                  {isEditing ? (
-                    <Input
-                      type="date"
-                      value={currentPlan.basics.dateRange?.start 
-                        ? (currentPlan.basics.dateRange.start instanceof Date 
-                          ? currentPlan.basics.dateRange.start.toISOString().split('T')[0]
-                          : new Date(currentPlan.basics.dateRange.start).toISOString().split('T')[0])
-                        : ''}
-                      onChange={(e) => {
-                        const date = e.target.value ? new Date(e.target.value) : null;
-                        setEditedPlan(prev => prev ? {
+            {/* Event Basics - Improved Card Layout */}
+            <Card className="bg-secondary/30">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-accent" />
+                  Event Basics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Event Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedPlan?.basics.name || ''}
+                        onChange={(e) => setEditedPlan(prev => prev ? {
                           ...prev,
-                          basics: {
-                            ...prev.basics,
-                            dateRange: {
-                              start: date,
-                              end: prev.basics.dateRange?.end || null
-                            }
-                          }
-                        } : null);
-                      }}
-                      className="mt-1"
-                    />
-                  ) : (
+                          basics: { ...prev.basics, name: e.target.value }
+                        } : null)}
+                        className="mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 font-medium text-foreground">{currentPlan.basics.name || 'Untitled'}</div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Event Type</Label>
                     <div className="mt-1">
-                      {currentPlan.basics.dateRange?.start 
-                        ? format(new Date(currentPlan.basics.dateRange.start), 'MMM d, yyyy')
-                        : 'TBD'}
+                      <Badge variant="outline" className="capitalize">
+                        {currentPlan.basics.type?.replace('-', ' ') || 'N/A'}
+                      </Badge>
                     </div>
-                  )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Date</Label>
+                    {isEditing ? (
+                      <Input
+                        type="date"
+                        value={currentPlan.basics.dateRange?.start 
+                          ? (currentPlan.basics.dateRange.start instanceof Date 
+                            ? currentPlan.basics.dateRange.start.toISOString().split('T')[0]
+                            : new Date(currentPlan.basics.dateRange.start).toISOString().split('T')[0])
+                          : ''}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : null;
+                          setEditedPlan(prev => prev ? {
+                            ...prev,
+                            basics: {
+                              ...prev.basics,
+                              dateRange: {
+                                start: date,
+                                end: prev.basics.dateRange?.end || null
+                              }
+                            }
+                          } : null);
+                        }}
+                        className="mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 font-medium text-foreground flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        {currentPlan.basics.dateRange?.start 
+                          ? format(new Date(currentPlan.basics.dateRange.start), 'MMM d, yyyy')
+                          : 'TBD'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Location</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedPlan?.basics.location || ''}
+                        onChange={(e) => setEditedPlan(prev => prev ? {
+                          ...prev,
+                          basics: { ...prev.basics, location: e.target.value }
+                        } : null)}
+                        className="mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 font-medium text-foreground flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        {currentPlan.basics.location || 'TBD'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Participants</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editedPlan?.basics.participants || 0}
+                        onChange={(e) => setEditedPlan(prev => prev ? {
+                          ...prev,
+                          basics: { ...prev.basics, participants: parseInt(e.target.value) || 0 }
+                        } : null)}
+                        className="mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 font-medium text-foreground flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        {currentPlan.basics.participants || 0} attendees
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Budget</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editedPlan?.basics.budget || 0}
+                        onChange={(e) => setEditedPlan(prev => prev ? {
+                          ...prev,
+                          basics: { ...prev.basics, budget: parseFloat(e.target.value) || 0 }
+                        } : null)}
+                        className="mt-1"
+                      />
+                    ) : (
+                      <div className="mt-1 font-medium text-foreground flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        ${currentPlan.basics.budget?.toLocaleString() || '0'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Estimated Cost</Label>
+                    <div className="mt-1 font-medium text-foreground flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      ${currentPlan.estimatedCost.toLocaleString()}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Location</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedPlan?.basics.location || ''}
-                      onChange={(e) => setEditedPlan(prev => prev ? {
-                        ...prev,
-                        basics: { ...prev.basics, location: e.target.value }
-                      } : null)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <div className="mt-1">{currentPlan.basics.location || 'TBD'}</div>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Participants</Label>
-                  {isEditing ? (
-                    <Input
-                      type="number"
-                      value={editedPlan?.basics.participants || 0}
-                      onChange={(e) => setEditedPlan(prev => prev ? {
-                        ...prev,
-                        basics: { ...prev.basics, participants: parseInt(e.target.value) || 0 }
-                      } : null)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <div className="mt-1">{currentPlan.basics.participants}</div>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Budget</Label>
-                  {isEditing ? (
-                    <Input
-                      type="number"
-                      value={editedPlan?.basics.budget || 0}
-                      onChange={(e) => setEditedPlan(prev => prev ? {
-                        ...prev,
-                        basics: { ...prev.basics, budget: parseFloat(e.target.value) || 0 }
-                      } : null)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <div className="mt-1">${currentPlan.basics.budget?.toLocaleString()}</div>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Estimated Cost</Label>
-                  <div className="mt-1">${currentPlan.estimatedCost.toLocaleString()}</div>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
             
-            <div>
-              <h3 className="font-semibold mb-2">Requirements</h3>
-              <div className="text-sm space-y-1">
-                <div>Lunch: {currentPlan.requirements.includeLunch ? 'Yes' : 'No'}</div>
-                <div>Accessibility: {currentPlan.requirements.accessibilityNeeded ? 'Required' : 'Not Required'}</div>
-                <div>Timeframe: {currentPlan.requirements.preferredTimeframe}</div>
-                <div>Venue: {currentPlan.requirements.venuePreference}</div>
-              </div>
-            </div>
+            {/* Requirements - Improved Card Layout */}
+            <Card className="bg-secondary/30">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-accent" />
+                  Requirements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Lunch Included</span>
+                    <Badge variant={currentPlan.requirements.includeLunch ? 'default' : 'secondary'}>
+                      {currentPlan.requirements.includeLunch ? 'Yes' : 'No'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Accessibility</span>
+                    <Badge variant={currentPlan.requirements.accessibilityNeeded ? 'default' : 'secondary'}>
+                      {currentPlan.requirements.accessibilityNeeded ? 'Required' : 'Not Required'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Preferred Timeframe</span>
+                    <Badge variant="outline" className="capitalize">
+                      {currentPlan.requirements.preferredTimeframe}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Venue Preference</span>
+                    <Badge variant="outline" className="capitalize">
+                      {currentPlan.requirements.venuePreference}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <div>
-              <h3 className="font-semibold mb-2">Status</h3>
-              <Badge className="capitalize">{currentPlan.status}</Badge>
-            </div>
+            {/* Status - Improved Card Layout */}
+            <Card className="bg-secondary/30">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-accent" />
+                  Event Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  <Badge className={`${riskColors[currentPlan.riskScore]} border capitalize text-sm px-3 py-1`}>
+                    <RiskIcon className="w-3 h-3 mr-1" />
+                    {currentPlan.riskScore} Risk
+                  </Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {currentPlan.status}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => navigate('/dashboard')}>
                 Go to Dashboard
               </Button>
