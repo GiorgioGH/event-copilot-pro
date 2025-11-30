@@ -71,6 +71,8 @@ export interface Vendor {
   website?: string;
   urlSource?: string;
   addressFull?: string;
+  email?: string;
+  phone?: string;
   lat?: number;
   lng?: number;
   distanceFromCphCentral?: number; // In km

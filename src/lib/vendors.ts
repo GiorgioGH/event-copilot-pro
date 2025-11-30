@@ -166,6 +166,8 @@ function transformVendor(scraped: ScrapedVendor, index: number): Vendor {
     website: scraped.website,
     urlSource: scraped.url_source,
     addressFull: scraped.address_full || undefined,
+    email: scraped.email || undefined,
+    phone: scraped.phone || undefined,
     // lat, lng, distanceFromCphCentral will be set lazily when geocoding is done
   };
 }

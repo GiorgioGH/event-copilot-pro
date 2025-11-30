@@ -2,3 +2,6 @@ project_id = "tcftdouivbvzhhrpxdzx"
 
 [functions.event-copilot-chat]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false

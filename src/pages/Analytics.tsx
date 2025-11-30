@@ -25,6 +25,7 @@ import { formatDkk } from '@/lib/utils/currency';
 
 interface EventStats {
   totalEvents: number;
+  totalAllEvents: number; // Total count of all future events (for accurate type percentages)
   totalBudget: number;
   totalUsed: number;
   averageBudget: number;
@@ -44,10 +45,10 @@ const Analytics = () => {
     fetch('/events.json')
       .then(res => res.json())
       .then((data: CopilotEvent[]) => {
-        // Valid event types
+        // Valid event types for filtering (but we'll count all types for events by type)
         const validEventTypes = ['team-building', 'seminar', 'workshop', 'offsite', 'networking', 'company-dinner'];
         
-        // Filter only future events with valid types
+        // Filter only future events with valid types for display
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const futureEvents = data.filter(event => {
@@ -65,7 +66,13 @@ const Analytics = () => {
         });
 
         setEvents(futureEvents);
-        calculateStats(futureEvents);
+        // Calculate stats using ALL future events (not just valid types) for accurate type distribution
+        const allFutureEvents = data.filter(event => {
+          const eventDate = new Date(event.date);
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate >= today && event.status === 'future';
+        });
+        calculateStats(allFutureEvents, futureEvents);
         setLoading(false);
       })
       .catch(error => {
@@ -74,40 +81,42 @@ const Analytics = () => {
       });
   }, []);
 
-  const calculateStats = (futureEvents: CopilotEvent[]) => {
-    const totalEvents = futureEvents.length;
-    const totalBudget = futureEvents.reduce((sum, e) => sum + (e.budgetTotal || 0), 0);
-    const totalUsed = futureEvents.reduce((sum, e) => sum + (e.budgetUsed || 0), 0);
+  const calculateStats = (allFutureEvents: CopilotEvent[], displayEvents: CopilotEvent[]) => {
+    const totalEvents = displayEvents.length;
+    const totalAllEvents = allFutureEvents.length;
+    const totalBudget = displayEvents.reduce((sum, e) => sum + (e.budgetTotal || 0), 0);
+    const totalUsed = displayEvents.reduce((sum, e) => sum + (e.budgetUsed || 0), 0);
     const averageBudget = totalEvents > 0 ? totalBudget / totalEvents : 0;
 
-    // Events by type
+    // Events by type - count ALL future events for accurate distribution
     const eventsByType: Record<string, number> = {};
-    futureEvents.forEach(event => {
+    allFutureEvents.forEach(event => {
       const type = event.type || 'other';
       eventsByType[type] = (eventsByType[type] || 0) + 1;
     });
 
     // Events by month
     const eventsByMonth: Record<string, number> = {};
-    futureEvents.forEach(event => {
+    displayEvents.forEach(event => {
       const date = new Date(event.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       eventsByMonth[monthKey] = (eventsByMonth[monthKey] || 0) + 1;
     });
 
     // Next event date
-    const nextEventDate = futureEvents.length > 0 
-      ? futureEvents[0].date 
+    const nextEventDate = displayEvents.length > 0 
+      ? displayEvents[0].date 
       : null;
 
     setStats({
       totalEvents,
+      totalAllEvents,
       totalBudget,
       totalUsed,
       averageBudget,
       eventsByType,
       eventsByMonth,
-      upcomingEvents: futureEvents.slice(0, 10), // Next 10 events
+      upcomingEvents: displayEvents.slice(0, 10), // Next 10 events
       nextEventDate,
     });
   };
@@ -326,7 +335,7 @@ const Analytics = () => {
                   {Object.entries(stats.eventsByType)
                     .sort(([, a], [, b]) => b - a)
                     .map(([type, count]) => {
-                      const percentage = Math.round((count / stats.totalEvents) * 100);
+                      const percentage = stats.totalAllEvents > 0 ? Math.round((count / stats.totalAllEvents) * 100) : 0;
                       return (
                         <div key={type}>
                           <div className="flex justify-between text-sm mb-1">

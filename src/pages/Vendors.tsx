@@ -412,7 +412,7 @@ const Vendors = () => {
 
         {/* Vendor Details Dialog */}
         <Dialog open={!!selectedVendorForDetails} onOpenChange={(open) => !open && setSelectedVendorForDetails(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto z-[100]">
             {selectedVendorForDetails && (
               <>
                 <DialogHeader>

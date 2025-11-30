@@ -169,11 +169,11 @@ const VendorMap: React.FC<VendorMapProps> = ({ vendors, selectedVendors, onToggl
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[500px] w-full rounded-lg overflow-hidden border border-border relative">
+        <div className="h-[500px] w-full rounded-lg overflow-hidden border border-border relative z-0">
           <MapContainer
             center={[centerLat, centerLng]}
             zoom={vendorLocations.length > 0 ? 12 : 11}
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: '100%', width: '100%', zIndex: 0 }}
             scrollWheelZoom={true}
           >
             <TileLayer

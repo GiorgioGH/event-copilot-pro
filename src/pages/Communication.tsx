@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getSponsorSuggestions, Contact, ChatMessage } from '@/lib/sponsors';
+import { supabase } from '@/integrations/supabase/client';
 
 const Communication = () => {
   const { currentPlan, selectedVendors } = useEvent();
@@ -44,15 +45,17 @@ const Communication = () => {
       const vendorContacts: Contact[] = selectedVendorData.map(vendor => ({
         id: vendor.id,
         name: vendor.name,
-        email: `${vendor.name.toLowerCase().replace(/\s+/g, '.')}@vendor.com`, // Mock email
-        phone: '+45 12 34 56 78', // Mock phone
+        email: vendor.email || `${vendor.name.toLowerCase().replace(/\s+/g, '.')}@vendor.com`,
+        phone: vendor.phone || undefined,
         type: 'vendor' as const,
         vendorType: vendor.type,
         messages: [
           {
             id: 'system-1',
             sender: 'system',
-            message: 'This chat is connected via email. All messages you send here will be automatically sent as emails to the vendor.',
+            message: vendor.email 
+              ? 'This chat is connected via email. All messages you send here will be automatically sent as emails to the vendor.'
+              : 'Email address not available for this vendor. Please contact them through their website.',
             timestamp: new Date(),
           },
         ],
@@ -68,9 +71,19 @@ const Communication = () => {
     });
   }, [selectedVendors, currentPlan]);
 
-  const handleSendMessage = (contactId: string) => {
+  const handleSendMessage = async (contactId: string) => {
     if (!messageInput.trim()) return;
     
+    const contact = contacts.find(c => c.id === contactId) || sponsors.find(s => s.id === contactId);
+    if (!contact || !contact.email) {
+      toast({
+        title: "Error",
+        description: "Contact email address not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender: 'me',
@@ -78,34 +91,97 @@ const Communication = () => {
       timestamp: new Date(),
     };
     
-    // Update contacts
-    setContacts(prev => prev.map(contact => {
-      if (contact.id === contactId) {
-        return {
-          ...contact,
-          messages: [...contact.messages, newMessage],
-        };
+    // Optimistically update UI
+    setContacts(prev => prev.map(c => {
+      if (c.id === contactId) {
+        return { ...c, messages: [...c.messages, newMessage] };
       }
-      return contact;
+      return c;
     }));
     
-    // Update sponsors
-    setSponsors(prev => prev.map(sponsor => {
-      if (sponsor.id === contactId) {
-        return {
-          ...sponsor,
-          messages: [...sponsor.messages, newMessage],
-        };
+    setSponsors(prev => prev.map(s => {
+      if (s.id === contactId) {
+        return { ...s, messages: [...s.messages, newMessage] };
       }
-      return sponsor;
+      return s;
     }));
     
+    const messageToSend = messageInput;
     setMessageInput('');
     
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent via email.",
-    });
+    try {
+      // Get user's email from Supabase auth or use a default
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'noreply@eventcopilot.com';
+      const userName = user?.user_metadata?.full_name || 'Event Copilot User';
+
+      // Get event details for email context
+      const eventName = currentPlan?.basics?.name || 'Corporate Event';
+      const eventDate = currentPlan?.basics?.dateRange?.start 
+        ? new Date(currentPlan.basics.dateRange.start).toLocaleDateString()
+        : 'TBD';
+      const participants = currentPlan?.basics?.participants || 0;
+
+      // Create email subject and body
+      const emailSubject = `Inquiry about ${contact.name} - ${eventName}`;
+      const emailBody = `Hello ${contact.name},\n\n${messageToSend}\n\n---\nEvent Details:\nEvent: ${eventName}\nDate: ${eventDate}\nParticipants: ${participants}\n\nBest regards,\n${userName}\n${userEmail}`;
+
+      // Call Supabase Edge Function to send email
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          to: contact.email,
+          subject: emailSubject,
+          body: emailBody,
+          fromEmail: userEmail,
+          fromName: userName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.mailtoLink) {
+        // Gmail API not configured, open mailto: link
+        window.location.href = result.mailtoLink;
+        toast({
+          title: "Email Client Opened",
+          description: "Your email client has been opened with the message. Please send it manually.",
+        });
+      } else if (result.success) {
+        toast({
+          title: "Message Sent",
+          description: "Your message has been sent via email.",
+        });
+      } else {
+        throw new Error(result.error || 'Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // Remove the optimistic message on error
+      setContacts(prev => prev.map(c => {
+        if (c.id === contactId) {
+          return { ...c, messages: c.messages.filter(m => m.id !== newMessage.id) };
+        }
+        return c;
+      }));
+      setSponsors(prev => prev.map(s => {
+        if (s.id === contactId) {
+          return { ...s, messages: s.messages.filter(m => m.id !== newMessage.id) };
+        }
+        return s;
+      }));
+      
+      toast({
+        title: "Error Sending Email",
+        description: error instanceof Error ? error.message : "Failed to send email. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const createZoomMeeting = (contactId: string) => {
