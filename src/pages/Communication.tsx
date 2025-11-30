@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardNav from '@/components/dashboard/DashboardNav';
 import { useEvent } from '@/contexts/EventContext';
@@ -19,7 +20,8 @@ import {
   Send,
   Sparkles,
   PhoneCall,
-  Loader2
+  Loader2,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getSponsorSuggestions, Contact, ChatMessage } from '@/lib/sponsors';
@@ -287,6 +289,40 @@ const Communication = () => {
     }
   };
 
+  // Generate pre-written email template with event details
+  const insertEmailTemplate = () => {
+    const eventName = currentPlan?.basics?.name || 'our upcoming event';
+    const eventType = currentPlan?.basics?.type?.replace('-', ' ') || 'corporate event';
+    const eventDate = currentPlan?.basics?.dateRange?.start 
+      ? new Date(currentPlan.basics.dateRange.start).toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })
+      : 'a date to be confirmed';
+    const participants = currentPlan?.basics?.participants || 'approximately 50';
+    const location = currentPlan?.basics?.location || 'Copenhagen';
+    const contactName = currentContact?.name || 'your team';
+
+    const template = `Hi ${contactName},
+
+I hope this message finds you well! I'm reaching out regarding ${eventName}, a ${eventType} we're planning for ${eventDate} in ${location}.
+
+We're expecting ${participants} participants and would love to explore how we can work together to make this event a success.
+
+Could you please provide information about:
+• Availability for our date
+• Pricing and packages
+• Any special requirements or considerations
+
+Looking forward to hearing from you!
+
+Best regards`;
+
+    setMessageInput(template);
+  };
+
   // Derive currentContact from updated arrays to always show latest messages
   const currentContact = selectedContact 
     ? (contacts.find(c => c.id === selectedContact.id) || sponsors.find(s => s.id === selectedContact.id) || selectedContact)
@@ -483,21 +519,36 @@ const Communication = () => {
                       
                       {/* Message Input */}
                       <div className="border-t p-4">
-                        <div className="flex items-center gap-2">
-                          <Input
+                        <div className="flex items-center gap-2 mb-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={insertEmailTemplate}
+                            className="gap-2 text-xs"
+                          >
+                            <FileText className="w-3 h-3" />
+                            Insert Template
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Textarea
                             placeholder="Type a message (sent via email)..."
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && messageInput.trim()) {
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey && messageInput.trim()) {
+                                e.preventDefault();
                                 handleSendMessage(currentContact.id);
                               }
                             }}
+                            className="min-h-[80px] resize-none"
+                            rows={3}
                           />
                           <Button
                             size="icon"
                             onClick={() => handleSendMessage(currentContact.id)}
                             disabled={!messageInput.trim()}
+                            className="h-auto"
                           >
                             <Send className="w-4 h-4" />
                           </Button>
@@ -671,21 +722,36 @@ const Communication = () => {
                       
                       {/* Message Input */}
                       <div className="border-t p-4">
-                        <div className="flex items-center gap-2">
-                          <Input
+                        <div className="flex items-center gap-2 mb-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={insertEmailTemplate}
+                            className="gap-2 text-xs"
+                          >
+                            <FileText className="w-3 h-3" />
+                            Insert Template
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Textarea
                             placeholder="Type a message (sent via email)..."
                             value={messageInput}
                             onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && messageInput.trim()) {
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey && messageInput.trim()) {
+                                e.preventDefault();
                                 handleSendMessage(currentContact.id);
                               }
                             }}
+                            className="min-h-[80px] resize-none"
+                            rows={3}
                           />
                           <Button
                             size="icon"
                             onClick={() => handleSendMessage(currentContact.id)}
                             disabled={!messageInput.trim()}
+                            className="h-auto"
                           >
                             <Send className="w-4 h-4" />
                           </Button>
