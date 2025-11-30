@@ -131,22 +131,44 @@ const Communication = () => {
       const emailSubject = `Inquiry about ${contact.name} - ${eventName}`;
       const emailBody = `Hello ${contact.name},\n\n${messageToSend}\n\n---\nEvent Details:\nEvent: ${eventName}\nDate: ${eventDate}\nParticipants: ${participants}\n\nBest regards,\n${userName}\n${userEmail}`;
 
-      // Call Supabase Edge Function to send email
+      // Call local email server (or Supabase Edge Function as fallback)
+      const EMAIL_SERVER_URL = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          to: contact.email,
-          subject: emailSubject,
-          body: emailBody,
-          fromEmail: userEmail,
-          fromName: userName,
-        }),
-      });
+      
+      let response;
+      try {
+        // Try local email server first
+        response = await fetch(`${EMAIL_SERVER_URL}/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: contact.email,
+            subject: emailSubject,
+            body: emailBody,
+            fromEmail: userEmail,
+            fromName: userName,
+          }),
+        });
+      } catch (localError) {
+        console.log('Local email server not available, trying Supabase...');
+        // Fallback to Supabase Edge Function
+        response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            to: contact.email,
+            subject: emailSubject,
+            body: emailBody,
+            fromEmail: userEmail,
+            fromName: userName,
+          }),
+        });
+      }
 
       const result = await response.json();
 
