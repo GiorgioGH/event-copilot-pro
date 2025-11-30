@@ -1,6 +1,7 @@
 import { EventPlan, Vendor } from '@/types/event';
 import { CopilotEvent } from '@/types/event';
 import { loadEventsFromLocalStorage } from './events';
+import { getCopenhagenWeather, getCopenhagenWeatherForecast, getWeatherEmoji, WeatherData } from './weather';
 
 export interface RiskItem {
   id: string;
@@ -11,38 +12,24 @@ export interface RiskItem {
   mitigation?: string;
 }
 
-interface WeatherData {
-  condition: string;
-  temperature: number;
-  precipitation: number; // 0-100
-  needsIndoor: boolean;
-}
+// Re-export WeatherData for use in other files
+export type { WeatherData };
 
-// Mock weather API - in production, use a real weather API
+/**
+ * Get real weather for a specific date in Copenhagen
+ * Uses OpenWeatherMap API
+ */
 export async function getWeatherForDate(date: Date, location: string): Promise<WeatherData> {
-  // Mock weather data - in production, call a real API like OpenWeatherMap
-  const daysUntil = Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  const now = new Date();
+  const daysUntil = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   
-  // For dates far in the future, return neutral weather
-  if (daysUntil > 7) {
-    return {
-      condition: 'Unknown',
-      temperature: 15,
-      precipitation: 20,
-      needsIndoor: false,
-    };
+  // If today or in the past, get current weather
+  if (daysUntil <= 0) {
+    return getCopenhagenWeather();
   }
   
-  // Mock: 30% chance of rain, 20% chance of cold
-  const mockPrecipitation = Math.random() * 100;
-  const mockTemp = 10 + Math.random() * 15; // 10-25°C
-  
-  return {
-    condition: mockPrecipitation > 50 ? 'Rainy' : mockTemp < 12 ? 'Cold' : 'Clear',
-    temperature: Math.round(mockTemp),
-    precipitation: Math.round(mockPrecipitation),
-    needsIndoor: mockPrecipitation > 50 || mockTemp < 12,
-  };
+  // Otherwise get forecast
+  return getCopenhagenWeatherForecast(date);
 }
 
 export function analyzeRisks(
@@ -180,26 +167,58 @@ export function analyzeRisks(
   }
   
   // 5. Weather Risk
+  // 5. Weather Risk - Using real Copenhagen weather data
   if (weather) {
-    if (weather.needsIndoor) {
+    const emoji = getWeatherEmoji(weather.condition);
+    const tempInfo = `${weather.temperature}°C`;
+    const precipInfo = weather.precipitation > 0 ? `, ${weather.precipitation}% chance of precipitation` : '';
+    const windInfo = weather.windSpeed && weather.windSpeed > 25 ? `, strong winds (${weather.windSpeed} km/h)` : '';
+    
+    if (weather.isBadWeather) {
+      // Bad weather conditions: rain, snow, fog, hail, etc.
       risks.push({
         id: 'weather',
         type: 'weather',
-        title: 'Weather Risk',
-        description: `${weather.condition} weather expected (${weather.temperature}°C, ${weather.precipitation}% precipitation) - indoor venue recommended`,
+        title: `${emoji} Weather Risk - ${weather.condition}`,
+        description: `${weather.description} expected in Copenhagen (${tempInfo}${precipInfo}${windInfo}). This may impact outdoor activities and travel.`,
         severity: 'high',
-        mitigation: 'Ensure venue has indoor backup or select an indoor venue',
+        mitigation: weather.condition.toLowerCase().includes('rain') || weather.condition.toLowerCase().includes('snow')
+          ? 'Book an indoor venue or ensure outdoor venue has covered backup. Arrange transport for attendees.'
+          : weather.condition.toLowerCase().includes('fog')
+          ? 'Ensure clear signage and lighting. Consider delays for attendees traveling from afar.'
+          : 'Monitor weather updates closely and have a backup plan ready.',
+      });
+    } else if (weather.needsIndoor) {
+      // Cold or windy but not necessarily bad conditions
+      risks.push({
+        id: 'weather',
+        type: 'weather',
+        title: `${emoji} Weather Advisory`,
+        description: `${weather.description} in Copenhagen (${tempInfo}${windInfo}). Indoor venue recommended.`,
+        severity: 'medium',
+        mitigation: 'Consider indoor activities or ensure adequate heating/shelter is available.',
       });
     } else {
+      // Good weather - no risk
       risks.push({
         id: 'weather',
         type: 'weather',
-        title: 'Weather Forecast',
-        description: `${weather.condition} weather expected (${weather.temperature}°C, ${weather.precipitation}% precipitation)`,
+        title: `${emoji} Weather - No Risk`,
+        description: `${weather.description} expected in Copenhagen (${tempInfo}${precipInfo}). Good conditions for your event.`,
         severity: 'low',
         mitigation: undefined,
       });
     }
+  } else {
+    // No weather data available
+    risks.push({
+      id: 'weather',
+      type: 'weather',
+      title: '🌡️ Weather Unavailable',
+      description: 'Weather data is not available. Check weather closer to the event date.',
+      severity: 'medium',
+      mitigation: 'Set a reminder to check weather 5 days before the event.',
+    });
   }
   
   // 6. Budget Risk

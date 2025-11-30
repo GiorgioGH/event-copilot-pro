@@ -247,28 +247,33 @@ const ConfigAssistant = ({ onBudgetUpdate }: ConfigAssistantProps) => {
       // Try Supabase function first, fallback to local advice
       let response: string;
       try {
-        const { data, error } = await supabase.functions.invoke('event-copilot-chat', {
-          body: {
-            message: userInput,
-            eventContext: {
-              plan: currentPlan,
-              selectedVendors,
-              tasks,
-              basics: eventBasics,
-              requirements: eventRequirements,
-              specialConditions: eventSpecialConditions,
+        if (supabase) {
+          const { data, error } = await supabase.functions.invoke('event-copilot-chat', {
+            body: {
+              message: userInput,
+              eventContext: {
+                plan: currentPlan,
+                selectedVendors,
+                tasks,
+                basics: eventBasics,
+                requirements: eventRequirements,
+                specialConditions: eventSpecialConditions,
+              }
             }
-          }
-        });
+          });
 
-        if (!error && data?.response) {
-          response = data.response;
-          // Handle the action if any
-          if (data.action && data.action !== 'none' && data.parameters) {
-            handleAction(data.action, data.parameters);
+          if (!error && data?.response) {
+            response = data.response;
+            // Handle the action if any
+            if (data.action && data.action !== 'none' && data.parameters) {
+              handleAction(data.action, data.parameters);
+            }
+          } else {
+            // Fallback to local advice generation
+            response = generateAdvice(userInput);
           }
         } else {
-          // Fallback to local advice generation
+          // Supabase not configured, use local advice
           response = generateAdvice(userInput);
         }
       } catch (error) {

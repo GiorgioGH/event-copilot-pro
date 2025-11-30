@@ -111,9 +111,14 @@ const Communication = () => {
     
     try {
       // Get user's email from Supabase auth or use a default
-      const { data: { user } } = await supabase.auth.getUser();
-      const userEmail = user?.email || 'noreply@eventcopilot.com';
-      const userName = user?.user_metadata?.full_name || 'Event Copilot User';
+      let userEmail = 'noreply@eventcopilot.com';
+      let userName = 'Event Copilot User';
+      
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        userEmail = user?.email || userEmail;
+        userName = user?.user_metadata?.full_name || userName;
+      }
 
       // Get event details for email context
       const eventName = currentPlan?.basics?.name || 'Corporate Event';
