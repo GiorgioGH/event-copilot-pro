@@ -50,7 +50,7 @@ const EventSelector = () => {
           <ChevronDown className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-80">
+      <DropdownMenuContent align="start" className="w-80 max-h-[400px] overflow-y-auto">
         <DropdownMenuLabel>Your Events</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
@@ -59,7 +59,8 @@ const EventSelector = () => {
             No events yet. Create your first event!
           </div>
         ) : (
-          eventList.map(([id, eventData]) => {
+          <div className="max-h-[320px] overflow-y-auto">
+            {eventList.map(([id, eventData]) => {
             const isCurrent = id === currentEventId;
             const plan = eventData.plan;
             
@@ -105,7 +106,8 @@ const EventSelector = () => {
                 </Button>
               </DropdownMenuItem>
             );
-          })
+          })}
+          </div>
         )}
         
         <DropdownMenuSeparator />

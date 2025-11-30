@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import DashboardNav from '@/components/dashboard/DashboardNav';
 import { useEvent } from '@/contexts/EventContext';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +15,6 @@ import {
   Store, 
   Star, 
   MapPin, 
-  DollarSign, 
   Users, 
   Check, 
   ArrowLeftRight,
@@ -48,6 +48,7 @@ const Vendors = () => {
   const [compareMode, setCompareMode] = useState(false);
   const [allVendors, setAllVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVendorForDetails, setSelectedVendorForDetails] = useState<Vendor | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -306,14 +307,26 @@ const Vendors = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className={`h-full transition-all hover:shadow-lg cursor-pointer ${isSelected ? 'ring-2 ring-accent' : ''} ${!vendor.availability ? 'opacity-60' : ''}`}>
-                        <CardHeader className="pb-3">
+                      <Card 
+                        className={`h-full transition-all hover:shadow-lg ${isSelected ? 'ring-2 ring-accent' : ''} ${!vendor.availability ? 'opacity-60' : ''}`}
+                        onClick={(e) => {
+                          // Don't open dialog if clicking checkbox or button
+                          if ((e.target as HTMLElement).closest('button, [role="checkbox"]')) {
+                            return;
+                          }
+                          setSelectedVendorForDetails(vendor);
+                        }}
+                      >
+                        <CardHeader className="pb-3 cursor-pointer">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                               <Checkbox
                                 checked={isSelected}
-                                onCheckedChange={() => toggleVendor(vendor.id)}
+                                onCheckedChange={() => {
+                                  toggleVendor(vendor.id);
+                                }}
                                 disabled={!vendor.availability}
+                                onClick={(e) => e.stopPropagation()}
                               />
                               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
                                 <Icon className="w-6 h-6 text-muted-foreground" />
@@ -328,26 +341,25 @@ const Vendors = () => {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <Star className="w-4 h-4 text-warning fill-warning" />
+                          <div className="flex items-center gap-4 text-sm flex-wrap">
+                            <span className="flex items-center gap-1 text-muted-foreground shrink-0">
+                              <Star className="w-4 h-4 text-warning fill-warning shrink-0" />
                               {vendor.rating}
                             </span>
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              <MapPin className="w-4 h-4" />
-                              {vendor.location}
+                            <span className="flex items-center gap-1 text-muted-foreground shrink-0 min-w-0">
+                              <MapPin className="w-4 h-4 shrink-0" />
+                              <span className="truncate">{vendor.location}</span>
                             </span>
-                            {vendor.capacity && (
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <Users className="w-4 h-4" />
-                                {vendor.capacity}
+                            {vendor.capacityMinMax && (
+                              <span className="flex items-center gap-1 text-muted-foreground whitespace-nowrap shrink-0">
+                                <Users className="w-4 h-4 shrink-0" />
+                                <span className="whitespace-nowrap">{vendor.capacityMinMax.replace(/\s+/g, ' ')}</span>
                               </span>
                             )}
                           </div>
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4 text-muted-foreground" />
                               <span className="text-lg font-semibold text-foreground">
                                 {formatDkk(vendor.priceEstimate)}
                               </span>
@@ -372,7 +384,10 @@ const Vendors = () => {
                           <Button 
                             className="w-full" 
                             variant={isSelected ? 'default' : 'outline'}
-                            onClick={() => toggleVendor(vendor.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleVendor(vendor.id);
+                            }}
                             disabled={!vendor.availability}
                           >
                             {isSelected ? (
@@ -394,6 +409,143 @@ const Vendors = () => {
             </TabsContent>
           ))}
         </Tabs>
+
+        {/* Vendor Details Dialog */}
+        <Dialog open={!!selectedVendorForDetails} onOpenChange={(open) => !open && setSelectedVendorForDetails(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            {selectedVendorForDetails && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {(() => {
+                        const Icon = typeIcons[selectedVendorForDetails.type] || Store;
+                        return (
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
+                            <Icon className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        );
+                      })()}
+                      <div>
+                        <DialogTitle className="text-2xl">{selectedVendorForDetails.name}</DialogTitle>
+                        <DialogDescription className="capitalize mt-1">
+                          {selectedVendorForDetails.type.replace('-', ' ')}
+                        </DialogDescription>
+                      </div>
+                    </div>
+                    <Badge variant={selectedVendorForDetails.availability ? 'default' : 'secondary'}>
+                      {selectedVendorForDetails.availability ? 'Available' : 'Unavailable'}
+                    </Badge>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-6 mt-4">
+                  {/* Description */}
+                  {selectedVendorForDetails.description && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {selectedVendorForDetails.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Key Info Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Price</p>
+                      <p className="text-sm font-semibold text-foreground">{formatDkk(selectedVendorForDetails.priceEstimate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Rating</p>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-warning fill-warning" />
+                        <span className="text-sm font-semibold text-foreground">{selectedVendorForDetails.rating}</span>
+                      </div>
+                    </div>
+                    {selectedVendorForDetails.capacityMinMax && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Capacity</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedVendorForDetails.capacityMinMax}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Location</p>
+                      <p className="text-sm font-semibold text-foreground truncate">{selectedVendorForDetails.location}</p>
+                    </div>
+                    {selectedVendorForDetails.addressFull && (
+                      <div className="col-span-2">
+                        <p className="text-xs text-muted-foreground mb-1">Address</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedVendorForDetails.addressFull}</p>
+                      </div>
+                    )}
+                    {selectedVendorForDetails.distanceFromCphCentral !== undefined && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Distance from CPH Central</p>
+                        <p className="text-sm font-semibold text-foreground">{formatDistance(selectedVendorForDetails.distanceFromCphCentral)}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Amenities */}
+                  {selectedVendorForDetails.amenities && selectedVendorForDetails.amenities.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Amenities</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedVendorForDetails.amenities.map((amenity, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {amenity}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Website Link */}
+                  {selectedVendorForDetails.website && (
+                    <div>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => window.open(selectedVendorForDetails.website, '_blank')}
+                      >
+                        Visit Website
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Select/Deselect Button */}
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      className="flex-1"
+                      variant={selectedVendors.includes(selectedVendorForDetails.id) ? 'default' : 'accent'}
+                      onClick={() => {
+                        toggleVendor(selectedVendorForDetails.id);
+                        setSelectedVendorForDetails(null);
+                      }}
+                      disabled={!selectedVendorForDetails.availability}
+                    >
+                      {selectedVendors.includes(selectedVendorForDetails.id) ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Selected
+                        </>
+                      ) : (
+                        'Select Vendor'
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedVendorForDetails(null)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </>
   );

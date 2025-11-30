@@ -217,10 +217,10 @@ const VendorMap: React.FC<VendorMapProps> = ({ vendors, selectedVendors, onToggl
                             </span>
                           </div>
                         )}
-                        {vendor.capacity && (
+                        {vendor.capacityMinMax && (
                           <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Capacity: {vendor.capacity}</span>
+                            <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className="text-muted-foreground whitespace-nowrap">Capacity: {vendor.capacityMinMax}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2">

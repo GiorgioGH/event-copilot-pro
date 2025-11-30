@@ -365,9 +365,7 @@ const EventSummaryCard = () => {
             </Card>
             
             {/* Special Conditions - Improved Card Layout */}
-            {(currentPlan.specialConditions?.speakerNames?.length > 0 || 
-              currentPlan.specialConditions?.dietaryRestrictions?.length > 0 || 
-              currentPlan.specialConditions?.equipment?.length > 0) && (
+            {currentPlan.specialConditions && (
               <Card className="bg-secondary/30">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -377,7 +375,7 @@ const EventSummaryCard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {currentPlan.specialConditions?.speakerNames && currentPlan.specialConditions.speakerNames.length > 0 && (
+                    {currentPlan.specialConditions.speakerNames && currentPlan.specialConditions.speakerNames.length > 0 && (
                       <div>
                         <Label className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
                           <Mic className="w-4 h-4" />

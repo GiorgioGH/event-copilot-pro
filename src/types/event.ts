@@ -64,6 +64,8 @@ export interface Vendor {
   rating: number;
   fitScore: number;
   capacity?: number;
+  capacityMinMax?: string; // Capacity range like "20-30"
+  description?: string;
   amenities?: string[];
   availability: boolean;
   website?: string;

@@ -134,6 +134,9 @@ function transformVendor(scraped: ScrapedVendor, index: number): Vendor {
   // Extract capacity
   const capacity = extractCapacity(scraped.capacity_min_max);
   
+  // Store capacity_min_max as string (e.g., "20-30")
+  const capacityMinMax = scraped.capacity_min_max || undefined;
+  
   // Get rating or default
   const rating = scraped.rating || 4.0;
   
@@ -156,6 +159,8 @@ function transformVendor(scraped: ScrapedVendor, index: number): Vendor {
     rating,
     fitScore,
     capacity,
+    capacityMinMax,
+    description: scraped.description || undefined,
     amenities: scraped.amenities || [],
     availability,
     website: scraped.website,
