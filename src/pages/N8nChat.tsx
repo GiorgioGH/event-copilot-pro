@@ -221,6 +221,8 @@ Tell me about the event you want to create - the type, date, number of participa
 
         // Load vendors first to match preferred vendors
         const preferredVendorNames = eventData.specialConditions?.preferredVendors || [];
+        console.log("🔍 Event data:", eventData);
+        console.log("🔍 Preferred vendors from event:", preferredVendorNames);
         let matchedVendorIds: string[] = [];
         
         if (preferredVendorNames.length > 0) {
